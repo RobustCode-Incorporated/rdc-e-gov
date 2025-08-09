@@ -1,0 +1,63 @@
+const jwt = require('jsonwebtoken');
+const { Citoyen, Administrateur, Agent, AdministrateurGeneral } = require('../models');
+
+// ✅ Utilise la même clé que dans le controller
+const JWT_SECRET = process.env.JWT_SECRET || 'ma_cle_super_secrete';
+
+const authMiddleware = (roles = []) => {
+  return async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'Token manquant' });
+    }
+
+    try {
+      // ✅ Vérifie et décode le token
+      const payload = jwt.verify(token, JWT_SECRET);
+
+      let user = null;
+
+      switch (payload.role) {
+        case 'citoyen':
+          user = await Citoyen.findByPk(payload.id);
+          break;
+        case 'admin':
+          user = await Administrateur.findByPk(payload.id);
+          break;
+        case 'agent':
+          user = await Agent.findByPk(payload.id);
+          break;
+        case 'admin_general':
+          user = await AdministrateurGeneral.findByPk(payload.id);
+          break;
+        default:
+          return res.status(401).json({ message: 'Rôle invalide dans le token' });
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: 'Utilisateur invalide ou introuvable' });
+      }
+
+      // ✅ Vérifie que le rôle est autorisé à accéder à cette route
+      if (roles.length && !roles.includes(payload.role)) {
+        return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
+      }
+
+      // ✅ Attache les données du token à la requête pour usage ultérieur
+      req.user = {
+        id: payload.id,
+        role: payload.role,
+        provinceId: payload.provinceId || null // utile pour admin_general
+      };
+
+      next();
+    } catch (err) {
+      console.error('Erreur vérification JWT:', err);
+      return res.status(403).json({ message: 'Token invalide' });
+    }
+  };
+};
+
+module.exports = authMiddleware;
