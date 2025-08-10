@@ -6,13 +6,18 @@
       <nav>
         <router-link to="/communes">📍 Communes</router-link>
         <router-link to="/administrateurs">👥 Bourgmestres</router-link>
-        <router-link to="/agents">🛡️ Agents</router-link>
-        <router-link to="/demandes">📄 Demandes</router-link>
+        <!-- Ces liens sont cachés pour le moment -->
+        <router-link v-if="showAgentsDemandes" to="/agents">🛡️ Agents</router-link>
+        <router-link v-if="showAgentsDemandes" to="/demandes">📄 Demandes</router-link>
       </nav>
     </aside>
 
     <!-- Contenu principal -->
     <main class="content">
+      <header class="header-logo">
+        <img src="../assets/logo_rdc.png" alt="Logo Gouvernement RDC" class="logo" />
+      </header>
+
       <header class="header">
         <h2>Tableau de bord</h2>
       </header>
@@ -49,6 +54,7 @@ export default {
   data() {
     return {
       loading: true,
+      showAgentsDemandes: false, // liens masqués pour l'instant
       stats: {
         totalCommunes: 0,
         communesAvecBourgmestre: 0,
@@ -119,6 +125,19 @@ export default {
   padding: 32px;
   background: #f7f7f7;
 }
+
+/* Nouveau style logo */
+.header-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  max-height: 60px;
+  object-fit: contain;
+}
+
 .cards {
   display: flex;
   gap: 24px;

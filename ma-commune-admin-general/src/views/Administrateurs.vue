@@ -1,5 +1,9 @@
 <template>
   <div class="container">
+    <header class="header-logo">
+      <img src="../assets/logo_rdc.png" alt="Logo Gouvernement RDC" class="logo" />
+    </header>
+
     <header class="page-header">
       <h1>Gestion des Administrateurs</h1>
     </header>
@@ -100,7 +104,6 @@ export default {
     async fetchCommunes() {
       try {
         const token = localStorage.getItem('token');
-        // Tu peux adapter l’URL selon la province du token si besoin
         const res = await axios.get('http://localhost:4000/api/communes/province/29', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -140,6 +143,15 @@ export default {
   padding: 32px;
   background: #f7f7f7;
   font-family: 'Roboto', sans-serif;
+}
+.header-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.logo {
+  max-height: 60px;
+  object-fit: contain;
 }
 .page-header {
   margin-bottom: 24px;

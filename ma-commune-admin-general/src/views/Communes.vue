@@ -1,5 +1,9 @@
 <template>
   <div class="page-communes">
+    <header class="header-logo">
+      <img src="../assets/logo_rdc.png" alt="Logo Gouvernement RDC" class="logo" />
+    </header>
+
     <h2>📍 Communes de votre province</h2>
 
     <section v-if="loading">Chargement...</section>
@@ -119,6 +123,15 @@ export default {
 .page-communes {
   padding: 30px;
   font-family: "Inter", sans-serif;
+}
+.header-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.logo {
+  max-height: 60px;
+  object-fit: contain;
 }
 table {
   width: 100%;
