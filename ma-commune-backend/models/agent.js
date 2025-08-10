@@ -1,49 +1,55 @@
+// models/agent.js
 'use strict';
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Agent extends Model {
-    /**
-     * Définir les associations
-     */
     static associate(models) {
       // Un agent appartient à une commune
       Agent.belongsTo(models.Commune, {
         foreignKey: 'communeId',
-        as: 'commune',
+        as: 'commune'
       });
-
-      // Si plus tard on veut lier les agents aux demandes qu’ils traitent,
-      // on pourrait ajouter une association ici (non nécessaire pour le moment)
     }
   }
 
   Agent.init(
     {
+      nom: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      prenom: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      postnom: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
       username: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
+        unique: true
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       communeId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false
       },
       typeDemande: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        comment: 'Type de demande que l’agent peut traiter (ex: acte naissance)',
-      },
+        type: DataTypes.ENUM('carte_identite', 'acte_naissance', 'acte_mariage', 'acte_residence'),
+        allowNull: false
+      }
     },
     {
       sequelize,
       modelName: 'Agent',
       tableName: 'Agents',
-      timestamps: true,
+      timestamps: true
     }
   );
 
