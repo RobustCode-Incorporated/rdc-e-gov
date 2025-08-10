@@ -1,28 +1,27 @@
 const { Commune, Administrateur } = require('../models');
 
+function buildNomComplet(communes) {
+  communes.forEach(commune => {
+    if (commune.administrateur) {
+      const a = commune.administrateur;
+      a.nomComplet = [a.nom, a.prenom, a.postnom].filter(Boolean).join(' ');
+    }
+  });
+}
+
 module.exports = {
-  // Récupérer toutes les communes
+  // Récupérer toutes les communes avec leur bourgmestre (administrateur)
   async getAllCommunes(req, res) {
     try {
       const communes = await Commune.findAll({
-        include: [
-          { 
-            model: Administrateur, 
-            as: 'administrateur', 
-            attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
-          }
-        ],
-        order: [['nom', 'ASC']]
+        include: [{ 
+          model: Administrateur, 
+          as: 'administrateur', 
+          attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
+        }],
+        order: [['nom', 'ASC']],
       });
-
-      // Construire nomComplet pour chaque admin
-      communes.forEach(commune => {
-        if (commune.administrateur) {
-          const a = commune.administrateur;
-          a.nomComplet = [a.nom, a.prenom, a.postnom].filter(Boolean).join(' ');
-        }
-      });
-
+      buildNomComplet(communes);
       res.status(200).json(communes);
     } catch (err) {
       console.error('Erreur getAllCommunes:', err);
@@ -34,11 +33,9 @@ module.exports = {
   async createCommune(req, res) {
     try {
       const { nom, code, provinceId, adminId } = req.body;
-
       if (!nom || !provinceId) {
         return res.status(400).json({ message: 'Nom et provinceId sont requis' });
       }
-
       const newCommune = await Commune.create({ nom, code, provinceId, adminId: adminId || null });
       res.status(201).json(newCommune);
     } catch (err) {
@@ -51,21 +48,14 @@ module.exports = {
   async getCommuneById(req, res) {
     try {
       const commune = await Commune.findByPk(req.params.id, {
-        include: [
-          { 
-            model: Administrateur, 
-            as: 'administrateur', 
-            attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
-          }
-        ]
+        include: [{ 
+          model: Administrateur, 
+          as: 'administrateur', 
+          attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
+        }]
       });
       if (!commune) return res.status(404).json({ message: 'Commune non trouvée' });
-
-      if (commune.administrateur) {
-        const a = commune.administrateur;
-        a.nomComplet = [a.nom, a.prenom, a.postnom].filter(Boolean).join(' ');
-      }
-
+      buildNomComplet([commune]);
       res.status(200).json(commune);
     } catch (err) {
       console.error('Erreur getCommuneById:', err);
@@ -78,14 +68,11 @@ module.exports = {
     try {
       const commune = await Commune.findByPk(req.params.id);
       if (!commune) return res.status(404).json({ message: 'Commune non trouvée' });
-
       const { nom, code, provinceId, adminId } = req.body;
-
       if (nom !== undefined) commune.nom = nom;
       if (code !== undefined) commune.code = code;
       if (provinceId !== undefined) commune.provinceId = provinceId;
       if (adminId !== undefined) commune.adminId = adminId;
-
       await commune.save();
       res.status(200).json(commune);
     } catch (err) {
@@ -94,34 +81,23 @@ module.exports = {
     }
   },
 
-  // Récupérer les communes d'une province (par nom ou id)
+  // Récupérer les communes d'une province (provinceId numérique obligatoire)
   async getCommunesByProvince(req, res) {
     try {
-      const provinceParam = req.params.province;
-
-      const whereClause = /^\d+$/.test(provinceParam)
-        ? { provinceId: parseInt(provinceParam, 10) }
-        : { province: provinceParam }; // fallback, si colonne province string existante
-
+      const provinceId = parseInt(req.params.provinceId, 10);
+      if (isNaN(provinceId)) {
+        return res.status(400).json({ message: 'provinceId invalide' });
+      }
       const communes = await Commune.findAll({
-        where: whereClause,
-        include: [
-          { 
-            model: Administrateur, 
-            as: 'administrateur', 
-            attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
-          }
-        ],
+        where: { provinceId },
+        include: [{ 
+          model: Administrateur, 
+          as: 'administrateur', 
+          attributes: ['id', 'username', 'nom', 'prenom', 'postnom'] 
+        }],
         order: [['nom', 'ASC']]
       });
-
-      communes.forEach(commune => {
-        if (commune.administrateur) {
-          const a = commune.administrateur;
-          a.nomComplet = [a.nom, a.prenom, a.postnom].filter(Boolean).join(' ');
-        }
-      });
-
+      buildNomComplet(communes);
       res.status(200).json(communes);
     } catch (err) {
       console.error('Erreur getCommunesByProvince:', err);
@@ -129,18 +105,15 @@ module.exports = {
     }
   },
 
-  // Assigner ou modifier l’administrateur d’une commune
+  // Assigner ou supprimer un bourgmestre (adminId) à une commune
   async assignAdminToCommune(req, res) {
     try {
-      const { communeId } = req.params;
+      const communeId = req.params.communeId;
       const { adminId } = req.body;
-
       const commune = await Commune.findByPk(communeId);
       if (!commune) return res.status(404).json({ message: 'Commune non trouvée' });
-
       commune.adminId = adminId || null;
       await commune.save();
-
       res.status(200).json({ message: 'Administrateur assigné', commune });
     } catch (err) {
       console.error('Erreur assignAdminToCommune:', err);

@@ -1,10 +1,10 @@
-const { Commune, Administrateur, Agent, AdministrateurGeneral } = require('../models');
+const { Op } = require('sequelize');
+const { AdministrateurGeneral, Commune, Agent } = require('../models');
 
 exports.statsForAdminGeneral = async (req, res) => {
   try {
     const adminGeneralId = req.user.id;
 
-    // Vérifie que l’administrateur général existe
     const adminGeneral = await AdministrateurGeneral.findByPk(adminGeneralId);
     if (!adminGeneral) {
       return res.status(404).json({ message: 'Administrateur général introuvable.' });
@@ -12,29 +12,40 @@ exports.statsForAdminGeneral = async (req, res) => {
 
     const provinceId = adminGeneral.provinceId;
 
-    // 1. Communes dans sa province
-    const communes = await Commune.findAll({ where: { provinceId } });
-    const communeIds = communes.map(c => c.id);
-    const communesCount = communeIds.length;
+    // Total communes dans la province
+    const totalCommunes = await Commune.count({ where: { provinceId } });
 
-    // 2. Administrateurs des communes de cette province
-    const administrateursCount = await Administrateur.count({
-      where: { communeId: communeIds }
+    // Communes avec bourgmestre (adminId non null)
+    const communesAvecBourgmestre = await Commune.count({
+      where: {
+        provinceId,
+        adminId: { [Op.ne]: null }
+      }
     });
 
-    // 3. Agents affectés aux communes de cette province
-    const agentsCount = await Agent.count({
-      where: { communeId: communeIds }
+    const communesSansBourgmestre = totalCommunes - communesAvecBourgmestre;
+
+    // Total agents dans la province via jointure commune
+    const totalAgents = await Agent.count({
+      include: [{
+        model: Commune,
+        as: 'commune',
+        where: { provinceId }
+      }]
     });
 
     res.status(200).json({
-      communes: communesCount,
-      administrateurs: administrateursCount,
-      agents: agentsCount
+      totalCommunes,
+      communesAvecBourgmestre,
+      communesSansBourgmestre,
+      totalAgents
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erreur lors du chargement des statistiques", error });
+    console.error('Erreur dashboard admin général:', error);
+    res.status(500).json({
+      message: "Erreur lors du chargement des statistiques",
+      error: error.message
+    });
   }
 };

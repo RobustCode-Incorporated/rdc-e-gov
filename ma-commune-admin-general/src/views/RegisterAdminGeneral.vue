@@ -8,8 +8,18 @@
       <h1>Créer un compte Administrateur Général</h1>
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label>Nom complet</label>
-          <input v-model="form.nomComplet" required />
+          <label>Nom</label>
+          <input v-model="form.nom" required />
+        </div>
+
+        <div class="form-group">
+          <label>Prénom</label>
+          <input v-model="form.prenom" required />
+        </div>
+
+        <div class="form-group">
+          <label>Postnom (optionnel)</label>
+          <input v-model="form.postnom" />
         </div>
 
         <div class="form-group">
@@ -48,7 +58,9 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const form = ref({
-  nomComplet: '',
+  nom: '',
+  prenom: '',
+  postnom: '',
   username: '',
   email: '',
   password: '',
@@ -71,7 +83,8 @@ const handleRegister = async () => {
 
 onMounted(async () => {
   try {
-    const res = await axios.get('/api/provinces');
+    const res = await axios.get('http://localhost:4000/api/provinces');
+    console.log('Provinces API response:', res.data);
     provinces.value = res.data;
   } catch (error) {
     console.error('Erreur lors du chargement des provinces :', error);

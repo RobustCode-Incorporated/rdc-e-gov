@@ -1,15 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/administrateurController');
-const auth = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.post('/', auth(['admin']), adminController.createAdministrateur);
-router.get('/', auth(['admin']), adminController.getAllAdministrateurs);
-router.get('/:id', auth(['admin']), adminController.getAdministrateurById);
-router.put('/:id', auth(['admin']), adminController.updateAdministrateur);
-// router.delete('/:id', auth(['admin']), adminController.deleteAdministrateur);
+// Création bourgmestre → réservé aux gouverneurs
+router.post('/', authMiddleware(['admin_general']), adminController.createAdministrateur);
 
-// Récupérer tous les admins de la province de l'admin_general connecté (plus sûr, sans paramètre en URL)
-router.get('/province', auth(['admin_general']), adminController.getAdminsOfMyProvince);
+// Liste tous les bourgmestres → réservé aux gouverneurs
+router.get('/', authMiddleware(['admin_general']), adminController.getAllAdministrateurs);
+
+// Récupérer bourgmestres de la province du gouverneur connecté
+router.get('/province', authMiddleware(['admin_general']), adminController.getAdminsOfMyProvince);
+
+// Récupérer un admin par ID
+router.get('/:id', authMiddleware(['admin_general']), adminController.getAdministrateurById);
+
+// Modifier un bourgmestre → réservé gouverneur
+router.put('/:id', authMiddleware(['admin_general']), adminController.updateAdministrateur);
+
+// Route suppression d’un bourgmestre → réservé aux admins généraux (ajuste si besoin)
+router.delete('/:id', authMiddleware(['admin_general']), adminController.deleteAdministrateur);
 
 module.exports = router;

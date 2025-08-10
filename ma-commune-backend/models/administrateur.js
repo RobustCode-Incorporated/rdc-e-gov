@@ -4,13 +4,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Administrateur extends Model {
     static associate(models) {
-      // Un administrateur appartient à une commune
-      Administrateur.belongsTo(models.Commune, {
-        foreignKey: 'communeId',
-        as: 'commune',
-      });
-
-      // Un administrateur peut avoir plusieurs communes assignées (optionnel)
+      // Un administrateur supervise plusieurs communes (hasMany)
       Administrateur.hasMany(models.Commune, {
         foreignKey: 'adminId',
         as: 'communes',
@@ -41,9 +35,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      communeId: {
-        type: DataTypes.INTEGER,
+      email: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      role: {
+        type: DataTypes.STRING,
         allowNull: false,
+        defaultValue: 'admin',
       },
     },
     {

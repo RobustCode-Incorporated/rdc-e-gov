@@ -13,9 +13,17 @@ module.exports = (sequelize, DataTypes) => {
 
   AdministrateurGeneral.init(
     {
-      nomComplet: {
+      nom: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      prenom: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      postnom: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       username: {
         type: DataTypes.STRING,
@@ -40,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
           model: 'Provinces',
           key: 'id'
         },
-        unique: true
+        unique: true // un seul admin général par province
       },
       role: {
         type: DataTypes.STRING,

@@ -1,15 +1,15 @@
+// controllers/adminGeneralController.js
 const { AdministrateurGeneral } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// ✅ Assure une clé cohérente dans tous les fichiers
 const JWT_SECRET = process.env.JWT_SECRET || 'ma_cle_super_secrete';
 
 module.exports = {
-  // ✅ Création d’un administrateur général
+  // Créer un administrateur général
   async createAdminGeneral(req, res) {
     try {
-      const { nomComplet, username, password, email, provinceId } = req.body;
+      const { nom, prenom, postnom, username, password, email, provinceId } = req.body;
 
       const existingAdminGeneral = await AdministrateurGeneral.findOne({ where: { provinceId } });
       if (existingAdminGeneral) {
@@ -24,7 +24,9 @@ module.exports = {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const adminGeneral = await AdministrateurGeneral.create({
-        nomComplet,
+        nom,
+        prenom,
+        postnom,
         username,
         password: hashedPassword,
         email,
@@ -39,7 +41,7 @@ module.exports = {
     }
   },
 
-  // ✅ Connexion admin général (login)
+  // Connexion admin général (login)
   async loginAdminGeneral(req, res) {
     try {
       const { username, password } = req.body;
@@ -50,7 +52,6 @@ module.exports = {
       const match = await bcrypt.compare(password, admin.password);
       if (!match) return res.status(401).json({ message: "Mot de passe incorrect" });
 
-      // ✅ Génération du token avec provinceId (pour sécuriser les accès)
       const token = jwt.sign(
         {
           id: admin.id,
@@ -68,10 +69,17 @@ module.exports = {
     }
   },
 
-  // ✅ Liste des admins généraux
+  // Liste des admins généraux (protégé)
   async getAllAdminGenerals(req, res) {
     try {
-      const adminGenerals = await AdministrateurGeneral.findAll();
+      if (req.user.role !== 'admin_general') {
+        return res.status(403).json({ message: "Accès interdit : rôle insuffisant" });
+      }
+
+      const adminGenerals = await AdministrateurGeneral.findAll({
+        attributes: ['id', 'username', 'nom', 'prenom', 'postnom', 'email', 'provinceId']
+      });
+
       res.status(200).json(adminGenerals);
     } catch (err) {
       console.error('Erreur récupération admins généraux:', err);
@@ -79,9 +87,13 @@ module.exports = {
     }
   },
 
-  // ✅ Récupérer un admin général par ID
+  // Récupérer un admin général par ID
   async getAdminGeneralById(req, res) {
     try {
+      if (req.user.role !== 'admin_general') {
+        return res.status(403).json({ message: "Accès interdit : rôle insuffisant" });
+      }
+
       const adminGeneral = await AdministrateurGeneral.findByPk(req.params.id);
       if (!adminGeneral) return res.status(404).json({ message: "Administrateur général non trouvé" });
 
@@ -92,13 +104,17 @@ module.exports = {
     }
   },
 
-  // ✅ Mise à jour
+  // Mise à jour
   async updateAdminGeneral(req, res) {
     try {
+      if (req.user.role !== 'admin_general') {
+        return res.status(403).json({ message: "Accès interdit : rôle insuffisant" });
+      }
+
       const adminGeneral = await AdministrateurGeneral.findByPk(req.params.id);
       if (!adminGeneral) return res.status(404).json({ message: "Administrateur général non trouvé" });
 
-      const { nomComplet, username, password, email, provinceId } = req.body;
+      const { nom, prenom, postnom, username, password, email, provinceId } = req.body;
 
       if (username && username !== adminGeneral.username) {
         const existingUsername = await AdministrateurGeneral.findOne({ where: { username } });
@@ -108,7 +124,9 @@ module.exports = {
         adminGeneral.username = username;
       }
 
-      if (nomComplet) adminGeneral.nomComplet = nomComplet;
+      if (nom) adminGeneral.nom = nom;
+      if (prenom) adminGeneral.prenom = prenom;
+      if (postnom) adminGeneral.postnom = postnom;
       if (email) adminGeneral.email = email;
       if (provinceId) adminGeneral.provinceId = provinceId;
       if (password) adminGeneral.password = await bcrypt.hash(password, 10);

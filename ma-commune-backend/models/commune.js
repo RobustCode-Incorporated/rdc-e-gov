@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Commune.hasMany(models.Citoyen, { foreignKey: 'communeId' });
       Commune.hasMany(models.Administrateur, { foreignKey: 'communeId', as: 'administrateurs' });
-      Commune.hasMany(models.Agent, { foreignKey: 'communeId' });
+      Commune.hasMany(models.Agent, { foreignKey: 'communeId', as: 'agents' });
       Commune.hasMany(models.Demande, { foreignKey: 'communeId' });
 
       Commune.belongsTo(models.Administrateur, {
