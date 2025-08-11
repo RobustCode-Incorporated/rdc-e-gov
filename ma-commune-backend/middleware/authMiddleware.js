@@ -1,8 +1,7 @@
+// middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const { Citoyen, Administrateur, Agent, AdministrateurGeneral } = require('../models');
-
-// ✅ Utilise la même clé que dans le controller
-const JWT_SECRET = process.env.JWT_SECRET || 'ma_cle_super_secrete';
+const { jwtSecret } = require('../config'); // clé secrète centralisée
 
 const authMiddleware = (roles = []) => {
   return async (req, res, next) => {
@@ -14,8 +13,8 @@ const authMiddleware = (roles = []) => {
     }
 
     try {
-      // ✅ Vérifie et décode le token
-      const payload = jwt.verify(token, JWT_SECRET);
+      // Vérifie et décode le token avec la clé centralisée
+      const payload = jwt.verify(token, jwtSecret);
 
       let user = null;
 
@@ -40,12 +39,12 @@ const authMiddleware = (roles = []) => {
         return res.status(401).json({ message: 'Utilisateur invalide ou introuvable' });
       }
 
-      // ✅ Vérifie que le rôle est autorisé à accéder à cette route
+      // Vérifie que le rôle est autorisé à accéder à cette route
       if (roles.length && !roles.includes(payload.role)) {
         return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
       }
 
-      // ✅ Attache les données du token à la requête pour usage ultérieur
+      // Attache les données du token à la requête pour usage ultérieur
       req.user = {
         id: payload.id,
         role: payload.role,

@@ -2,8 +2,7 @@
 const { Administrateur, Commune } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
+const { jwtSecret } = require('../config'); // clé secrète centralisée
 
 module.exports = {
   // Création d’un bourgmestre par un gouverneur
@@ -11,32 +10,26 @@ module.exports = {
     try {
       const { username, password, communeId, nom, prenom, postnom, email } = req.body;
 
-      // Validation des champs obligatoires
       if (!nom || !username || !password || !communeId) {
         return res.status(400).json({ message: "Champs obligatoires manquants." });
       }
 
-      // Vérifier que la commune existe
       const commune = await Commune.findByPk(communeId);
       if (!commune) {
         return res.status(404).json({ message: "Commune introuvable." });
       }
 
-      // Vérifier si la commune a déjà un bourgmestre (adminId dans Commune)
       if (commune.adminId) {
         return res.status(400).json({ message: "Cette commune a déjà un bourgmestre." });
       }
 
-      // Vérifier si le username est déjà pris
       const existingUser = await Administrateur.findOne({ where: { username } });
       if (existingUser) {
         return res.status(400).json({ message: "Nom d'utilisateur déjà utilisé." });
       }
 
-      // Hasher le mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Créer l’admin (bourgmestre) sans communeId direct
       const admin = await Administrateur.create({
         nom,
         prenom,
@@ -44,10 +37,9 @@ module.exports = {
         username,
         email,
         password: hashedPassword,
-        role: 'admin' // rôle fixe bourgmestre
+        role: 'admin' // Bourgmestre
       });
 
-      // Assigner le bourgmestre à la commune via adminId
       commune.adminId = admin.id;
       await commune.save();
 
@@ -58,35 +50,47 @@ module.exports = {
     }
   },
 
-  // Login administrateur (bourgmestre)
+  // Login administrateur (gouverneur ou bourgmestre)
   async loginAdministrateur(req, res) {
     try {
       const { username, password } = req.body;
 
-      const admin = await Administrateur.findOne({
-        where: { username }
-      });
-
+      const admin = await Administrateur.findOne({ where: { username } });
       if (!admin) return res.status(404).json({ message: "Administrateur non trouvé" });
 
       const match = await bcrypt.compare(password, admin.password);
       if (!match) return res.status(401).json({ message: "Mot de passe incorrect" });
 
-      // Pour récupérer provinceId, on cherche la commune liée (via adminId)
-      const commune = await Commune.findOne({ where: { adminId: admin.id }, attributes: ['provinceId'] });
+      let provinceId = null;
+      let communeId = null;
+
+      if (admin.role === 'admin_general') {
+        provinceId = admin.provinceId || null;
+      } else if (admin.role === 'admin') {
+        const commune = await Commune.findOne({
+          where: { adminId: admin.id },
+          attributes: ['id', 'provinceId']
+        });
+        if (commune) {
+          provinceId = commune.provinceId;
+          communeId = commune.id;
+        }
+      }
 
       const token = jwt.sign(
         {
           id: admin.id,
           role: admin.role,
-          provinceId: commune ? commune.provinceId : null
+          provinceId,
+          communeId
         },
-        JWT_SECRET,
+        jwtSecret,
         { expiresIn: '1d' }
       );
 
       res.status(200).json({ token });
     } catch (err) {
+      console.error("Erreur loginAdministrateur:", err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -94,17 +98,15 @@ module.exports = {
   // Liste de tous les bourgmestres
   async getAllAdministrateurs(req, res) {
     try {
-      // Récupérer admins avec leur commune via Commune.adminId = admin.id
       const admins = await Administrateur.findAll({
         attributes: ['id', 'username', 'nom', 'prenom', 'postnom', 'role', 'email'],
         include: {
           model: Commune,
-          as: 'communes', // via hasMany dans modèle admin
+          as: 'communes',
           attributes: ['id', 'nom', 'code', 'provinceId']
         }
       });
 
-      // Construire nomComplet
       const adminsWithFullName = admins.map(admin => ({
         ...admin.get({ plain: true }),
         nomComplet: [admin.nom, admin.prenom, admin.postnom].filter(Boolean).join(' ')
@@ -112,6 +114,7 @@ module.exports = {
 
       res.status(200).json(adminsWithFullName);
     } catch (err) {
+      console.error("Erreur getAllAdministrateurs:", err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -128,8 +131,6 @@ module.exports = {
         return res.status(400).json({ message: "Province ID manquant dans le token" });
       }
 
-      // Trouver toutes les communes dans la province
-      // Puis filtrer les admins qui sont assignés à ces communes
       const communes = await Commune.findAll({
         where: { provinceId },
         attributes: ['adminId'],
@@ -163,6 +164,7 @@ module.exports = {
 
       res.status(200).json(admin);
     } catch (err) {
+      console.error("Erreur getAdministrateurById:", err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -186,6 +188,7 @@ module.exports = {
 
       res.status(200).json(admin);
     } catch (err) {
+      console.error("Erreur updateAdministrateur:", err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -200,14 +203,12 @@ module.exports = {
         return res.status(404).json({ message: "Bourgmestre non trouvé" });
       }
 
-      // Trouver la commune supervisée par cet admin (adminId)
       const commune = await Commune.findOne({ where: { adminId } });
       if (commune) {
-        commune.adminId = null; // désassigner le bourgmestre
+        commune.adminId = null;
         await commune.save();
       }
 
-      // Supprimer le bourgmestre
       await admin.destroy();
 
       res.status(200).json({ message: "Bourgmestre supprimé avec succès" });
