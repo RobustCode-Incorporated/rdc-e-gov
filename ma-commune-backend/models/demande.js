@@ -19,7 +19,13 @@ module.exports = (sequelize, DataTypes) => {
         as: 'commune',
       });
 
-      // Une demande a un statut (Ex : En cours, Validée...)
+      // Ajoute dans la méthode associate :
+      Demande.belongsTo(models.Agent, {
+        foreignKey: 'agentId',
+        as: 'agent',
+      });
+
+      // Une demande a un statut (ex : En cours, Validée...)
       Demande.belongsTo(models.Statut, {
         foreignKey: 'statutId',
         as: 'statut',
@@ -57,8 +63,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Demande',
-      tableName: 'Demandes', // optionnel
-      timestamps: true, // pour garder la date de soumission, modif
+      tableName: 'Demandes',
+      timestamps: true, // garde createdAt et updatedAt
     }
   );
 

@@ -3,31 +3,27 @@ const { Agent, Commune } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'ma_cle_super_secrete';
 
 module.exports = {
-  // Créer un agent
+  // Créer un agent (uniquement par bourgmestre - role 'admin')
   async createAgent(req, res) {
     try {
       const { nom, prenom, postnom, username, password, typeDemande } = req.body;
 
-      // Décoder le token pour récupérer la commune du bourgmestre
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) return res.status(401).json({ message: "Token manquant" });
-
-      const payload = jwt.verify(token, JWT_SECRET);
-
-      if (payload.role !== 'admin') {
+      // Utilise req.user passé par authMiddleware pour récupérer l'id admin (bourgmestre)
+      const adminId = req.user?.id;
+      if (!adminId || req.user.role !== 'admin') {
         return res.status(403).json({ message: "Accès refusé" });
       }
 
-      // On récupère la commune du bourgmestre
-      const commune = await Commune.findOne({ where: { administrateurId: payload.id } });
+      // Trouve la commune gérée par ce bourgmestre
+      const commune = await Commune.findOne({ where: { adminId } });
       if (!commune) {
         return res.status(400).json({ message: "Impossible de trouver votre commune" });
       }
 
-      // Vérification si le username existe déjà
+      // Vérifie que le username est unique
       const existing = await Agent.findOne({ where: { username } });
       if (existing) return res.status(400).json({ message: "Nom d'utilisateur déjà utilisé" });
 
@@ -45,12 +41,12 @@ module.exports = {
 
       res.status(201).json(agent);
     } catch (err) {
-      console.error(err);
+      console.error('Erreur createAgent:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
 
-  // Connexion d'un agent
+  // Connexion agent
   async loginAgent(req, res) {
     try {
       const { username, password } = req.body;
@@ -69,23 +65,20 @@ module.exports = {
 
       res.status(200).json({ token });
     } catch (err) {
+      console.error('Erreur loginAgent:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
 
-  // Voir tous les agents de la commune du bourgmestre connecté
+  // Récupérer tous les agents de la commune du bourgmestre connecté
   async getAgentsOfMyCommune(req, res) {
     try {
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) return res.status(401).json({ message: "Token manquant" });
-
-      const payload = jwt.verify(token, JWT_SECRET);
-
-      if (payload.role !== 'admin') {
+      const adminId = req.user?.id;
+      if (!adminId || req.user.role !== 'admin') {
         return res.status(403).json({ message: "Accès refusé" });
       }
 
-      const commune = await Commune.findOne({ where: { administrateurId: payload.id } });
+      const commune = await Commune.findOne({ where: { adminId } });
       if (!commune) {
         return res.status(400).json({ message: "Impossible de trouver votre commune" });
       }
@@ -97,12 +90,12 @@ module.exports = {
 
       res.status(200).json(agents);
     } catch (err) {
-      console.error(err);
+      console.error('Erreur getAgentsOfMyCommune:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
 
-  // Voir un agent spécifique
+  // Récupérer un agent par ID
   async getAgentById(req, res) {
     try {
       const agent = await Agent.findByPk(req.params.id, {
@@ -112,6 +105,7 @@ module.exports = {
 
       res.status(200).json(agent);
     } catch (err) {
+      console.error('Erreur getAgentById:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -135,6 +129,7 @@ module.exports = {
 
       res.status(200).json(agent);
     } catch (err) {
+      console.error('Erreur updateAgent:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   },
@@ -148,6 +143,7 @@ module.exports = {
       await agent.destroy();
       res.status(200).json({ message: "Agent supprimé avec succès" });
     } catch (err) {
+      console.error('Erreur deleteAgent:', err);
       res.status(500).json({ message: "Erreur serveur", error: err.message });
     }
   }
