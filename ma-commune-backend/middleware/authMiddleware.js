@@ -44,13 +44,15 @@ const authMiddleware = (roles = []) => {
         return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
       }
 
-      // Attache les données du token à la requête pour usage ultérieur
+      // Attache les données essentielles du token à la requête
       req.user = {
         id: payload.id,
         role: payload.role,
-        provinceId: payload.provinceId || null // utile pour admin_general
+        provinceId: payload.provinceId || null,      // Pour admin_general
+        communeId: payload.communeId || null,        // Pour agent et admin
+        typeDemande: payload.typeDemande || null     // Pour agent (type de demande traité)
       };
-
+      console.log('User attaché à la requête:', req.user); // Debug
       next();
     } catch (err) {
       console.error('Erreur vérification JWT:', err);

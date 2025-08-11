@@ -23,17 +23,28 @@ module.exports = {
   // Récupérer une demande par son ID
   async getDemandeById(req, res) {
     try {
-      const demande = await Demande.findByPk(req.params.id, {
+      const id = parseInt(req.params.id, 10);
+  
+      console.log("ID reçu pour getDemandeById :", req.params.id);
+  
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID invalide" });
+      }
+  
+      const demande = await Demande.findByPk(id, {
         include: [
           { model: Citoyen, as: 'citoyen' },
           { model: Statut, as: 'statut' },
           { model: Agent, as: 'agent' }
         ]
       });
+  
       if (!demande) {
         return res.status(404).json({ message: 'Demande non trouvée' });
       }
+  
       res.json(demande);
+  
     } catch (error) {
       console.error('Erreur getDemandeById:', error);
       res.status(500).json({ message: 'Erreur serveur', error: error.message });
