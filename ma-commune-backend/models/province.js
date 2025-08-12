@@ -9,6 +9,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'provinceId',
         as: 'administrateursGeneraux'
       });
+
+      // 🔹 Relation avec les communes
+      Province.hasMany(models.Commune, {
+        foreignKey: 'provinceId',
+        as: 'communes'
+      });
     }
   }
 

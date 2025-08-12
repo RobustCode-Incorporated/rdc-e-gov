@@ -3,8 +3,19 @@ const router = express.Router();
 const controller = require('../controllers/communeController');
 const auth = require('../middleware/authMiddleware');
 
-// Route publique - Toutes les communes
+// --------------------
+// Routes publiques
+// --------------------
+
+// Liste de toutes les communes publiques (sans auth)
 router.get('/', controller.getAllCommunes);
+
+// Communes d'une province (publique, sans auth)
+router.get('/public/province/:provinceId', controller.getCommunesByProvincePublic);
+
+// --------------------
+// Routes protégées (auth + rôles)
+// --------------------
 
 // Communes d'une province (protégée, admin_general seulement)
 router.get('/province/:provinceId', auth(['admin_general']), controller.getCommunesByProvince);

@@ -105,6 +105,24 @@ module.exports = {
     }
   },
 
+  // Nouvelle méthode publique pour communes par province (sans auth)
+  async getCommunesByProvincePublic(req, res) {
+    try {
+      const provinceId = parseInt(req.params.provinceId, 10);
+      if (isNaN(provinceId)) {
+        return res.status(400).json({ message: 'provinceId invalide' });
+      }
+      const communes = await Commune.findAll({
+        where: { provinceId },
+        order: [['nom', 'ASC']]
+      });
+      res.status(200).json(communes);
+    } catch (err) {
+      console.error('Erreur getCommunesByProvincePublic:', err);
+      res.status(500).json({ message: 'Erreur serveur', error: err.message });
+    }
+  },
+
   // Assigner ou supprimer un bourgmestre (adminId) à une commune
   async assignAdminToCommune(req, res) {
     try {

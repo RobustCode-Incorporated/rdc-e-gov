@@ -3,8 +3,31 @@ const jwt = require('jsonwebtoken');
 const { Citoyen, Administrateur, Agent, AdministrateurGeneral } = require('../models');
 const { jwtSecret } = require('../config'); // clé secrète centralisée
 
+// Liste des routes publiques à ignorer (méthode et chemin RegExp)
+// IMPORTANT : ne pas inclure '/api' dans les chemins car middleware est appliqué sur '/api'
+const publicPaths = [
+  { method: 'GET', path: /^\/provinces\/?$/ },
+  { method: 'GET', path: /^\/communes\/public\/province\/\d+\/?$/ },
+  { method: 'POST', path: /^\/auth\/login\/?$/ },
+  { method: 'POST', path: /^\/citoyens\/register\/?$/ },
+  // Ajoute d'autres routes publiques ici si besoin
+];
+
+function isPublicRoute(req) {
+  // On ne considère que la partie path sans query params
+  const path = req.path;
+  return publicPaths.some(route =>
+    route.method === req.method && route.path.test(path)
+  );
+}
+
 const authMiddleware = (roles = []) => {
   return async (req, res, next) => {
+    // Ignore l’authentification pour les routes publiques
+    if (isPublicRoute(req)) {
+      return next();
+    }
+
     const authHeader = req.headers['authorization'];
     const token = authHeader?.split(' ')[1];
 
@@ -13,7 +36,6 @@ const authMiddleware = (roles = []) => {
     }
 
     try {
-      // Vérifie et décode le token avec la clé centralisée
       const payload = jwt.verify(token, jwtSecret);
 
       let user = null;
@@ -39,20 +61,18 @@ const authMiddleware = (roles = []) => {
         return res.status(401).json({ message: 'Utilisateur invalide ou introuvable' });
       }
 
-      // Vérifie que le rôle est autorisé à accéder à cette route
       if (roles.length && !roles.includes(payload.role)) {
         return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
       }
 
-      // Attache les données essentielles du token à la requête
       req.user = {
         id: payload.id,
         role: payload.role,
-        provinceId: payload.provinceId || null,      // Pour admin_general
-        communeId: payload.communeId || null,        // Pour agent et admin
-        typeDemande: payload.typeDemande || null     // Pour agent (type de demande traité)
+        provinceId: payload.provinceId || null,
+        communeId: payload.communeId || null,
+        typeDemande: payload.typeDemande || null,
       };
-      console.log('User attaché à la requête:', req.user); // Debug
+      console.log('Utilisateur attaché à la requête:', req.user);
       next();
     } catch (err) {
       console.error('Erreur vérification JWT:', err);
