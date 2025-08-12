@@ -104,10 +104,11 @@ export default {
     async fetchCommunes() {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:4000/api/communes/province/29', {
+        const res = await axios.get('http://localhost:4000/api/communes/province/1', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        this.communes = res.data;
+        // Correction : assigner les données de l'API à la variable communes du composant
+        this.communes = res.data; 
       } catch (error) {
         console.error('Erreur lors du chargement des communes :', error);
       }

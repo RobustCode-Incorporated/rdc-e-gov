@@ -52,7 +52,7 @@
           localStorage.setItem("token", res.data.token);
   
           // Rediriger vers le dashboard
-          this.$router.push("/dashboard");
+          this.$router.push("/dashboard-bourgmestre");
         } catch (err) {
           console.error("Erreur connexion bourgmestre :", err);
           this.error = err.response?.data?.message || "Connexion échouée";
