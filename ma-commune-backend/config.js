@@ -1,9 +1,14 @@
 // config.js
 require('dotenv').config();
 
-const jwtSecret = process.env.JWT_SECRET || 'ma_cle_super_secrete';
+const jwtSecret = process.env.JWT_SECRET;
 
-console.log('Clé JWT utilisée:', jwtSecret); // juste pour debug au démarrage
+if (!jwtSecret) {
+  console.error('Erreur: La variable JWT_SECRET est manquante.');
+  process.exit(1); // Arrête l'application avec une erreur
+}
+
+console.log('Clé JWT utilisée:', jwtSecret);
 
 module.exports = {
   jwtSecret,

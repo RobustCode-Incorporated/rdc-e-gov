@@ -51,3 +51,20 @@ exports.deleteCitoyen = async (req, res) => {
     res.status(400).json({ message: 'Erreur suppression', error });
   }
 };
+
+exports.getProfile = async (req, res) => {
+  try {
+    const citoyen = await Citoyen.findByPk(req.user.id, {
+      include: [
+        { model: Commune, as: 'commune' }
+      ]
+    });
+
+    if (!citoyen) return res.status(404).json({ message: 'Citoyen non trouvé' });
+
+    res.json(citoyen);
+  } catch (error) {
+    console.error('Erreur getProfile:', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};

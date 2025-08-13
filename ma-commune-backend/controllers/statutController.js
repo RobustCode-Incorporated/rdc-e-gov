@@ -1,6 +1,6 @@
+// controllers/statutController.js
 const { Statut, Commune, Administrateur, Agent } = require('../models');
 
-// 🟢 Renvoyer tous les statuts
 const getAllStatuts = async (req, res) => {
   try {
     const statuts = await Statut.findAll();
@@ -10,7 +10,6 @@ const getAllStatuts = async (req, res) => {
   }
 };
 
-// 🟢 Créer un nouveau statut
 const createStatut = async (req, res) => {
   try {
     const newStatut = await Statut.create(req.body);
@@ -20,26 +19,30 @@ const createStatut = async (req, res) => {
   }
 };
 
-// ✅ Statistiques globales pour dashboard (admin_general uniquement)
 const getDashboardStats = async (req, res) => {
   try {
     const communesCount = await Commune.count();
     const administrateursCount = await Administrateur.count();
     const agentsCount = await Agent.count();
-
-    res.status(200).json({
-      communes: communesCount,
-      administrateurs: administrateursCount,
-      agents: agentsCount
-    });
+    res.status(200).json({ communes: communesCount, administrateurs: administrateursCount, agents: agentsCount });
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors du chargement des statistiques', error });
   }
 };
 
-// ✅ Export des fonctions
+// Route publique pour que les citoyens puissent voir les statuts
+const getAllStatutsPublic = async (req, res) => {
+  try {
+    const statuts = await Statut.findAll();
+    res.json(statuts);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
 module.exports = {
   getAllStatuts,
   createStatut,
-  getDashboardStats
+  getDashboardStats,
+  getAllStatutsPublic
 };

@@ -10,4 +10,8 @@ router.post('/', auth(['agent', 'admin']), citoyenController.createCitoyen);
 router.put('/:id', auth(['agent', 'admin']), citoyenController.updateCitoyen);
 router.delete('/:id', auth(['admin']), citoyenController.deleteCitoyen); // suppression réservée à l’admin
 
+// 🔹 Nouvelle route : profil du citoyen connecté
+router.get('/me', auth(['citoyen']), citoyenController.getProfile);
+
+
 module.exports = router;

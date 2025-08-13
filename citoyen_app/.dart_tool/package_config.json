@@ -2,12 +2,6 @@
   "configVersion": 2,
   "packages": [
     {
-      "name": "args",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/args-2.7.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.3"
-    },
-    {
       "name": "async",
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/async-2.13.0",
       "packageUri": "lib/",
@@ -56,12 +50,6 @@
       "languageVersion": "3.1"
     },
     {
-      "name": "dbus",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/dbus-0.7.11",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
-    },
-    {
       "name": "fake_async",
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/fake_async-1.3.3",
       "packageUri": "lib/",
@@ -72,18 +60,6 @@
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/ffi-2.1.4",
       "packageUri": "lib/",
       "languageVersion": "3.7"
-    },
-    {
-      "name": "file",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/file-7.0.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "file_picker",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/file_picker-10.3.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
     },
     {
       "name": "file_selector_linux",
@@ -116,58 +92,52 @@
       "languageVersion": "3.7"
     },
     {
-      "name": "flutter_datetime_picker_plus",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_datetime_picker_plus-2.2.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "flutter_dotenv",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_dotenv-5.2.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "flutter_lints",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_lints-3.0.2",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "flutter_local_notifications",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_local_notifications-19.4.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "flutter_local_notifications_linux",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_local_notifications_linux-6.0.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "flutter_local_notifications_platform_interface",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_local_notifications_platform_interface-9.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "flutter_local_notifications_windows",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_local_notifications_windows-1.0.2",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "flutter_localizations",
-      "rootUri": "file:///Users/johnluc/flutter/packages/flutter_localizations",
-      "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.1"
     },
     {
       "name": "flutter_plugin_android_lifecycle",
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.29",
       "packageUri": "lib/",
       "languageVersion": "3.6"
+    },
+    {
+      "name": "flutter_secure_storage",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage-9.2.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "flutter_secure_storage_linux",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage_linux-1.2.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "flutter_secure_storage_macos",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage_macos-3.1.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "flutter_secure_storage_platform_interface",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage_platform_interface-1.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "flutter_secure_storage_web",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage_web-1.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "flutter_secure_storage_windows",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "flutter_test",
@@ -249,9 +219,15 @@
     },
     {
       "name": "intl",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/intl-0.20.2",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/intl-0.19.0",
       "packageUri": "lib/",
-      "languageVersion": "3.3"
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "js",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/js-0.6.7",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
     },
     {
       "name": "leak_tracker",
@@ -273,9 +249,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/lints-5.1.1",
+      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/lints-3.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.6"
+      "languageVersion": "3.0"
     },
     {
       "name": "matcher",
@@ -350,12 +326,6 @@
       "languageVersion": "3.2"
     },
     {
-      "name": "petitparser",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/petitparser-6.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
       "name": "platform",
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/platform-3.1.6",
       "packageUri": "lib/",
@@ -372,48 +342,6 @@
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/provider-6.1.5",
       "packageUri": "lib/",
       "languageVersion": "2.12"
-    },
-    {
-      "name": "shared_preferences",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences-2.5.3",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "shared_preferences_android",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.11",
-      "packageUri": "lib/",
-      "languageVersion": "3.6"
-    },
-    {
-      "name": "shared_preferences_foundation",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.4",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "shared_preferences_linux",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_linux-2.4.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.3"
-    },
-    {
-      "name": "shared_preferences_platform_interface",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_platform_interface-2.4.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.2"
-    },
-    {
-      "name": "shared_preferences_web",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_web-2.4.3",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
-    },
-    {
-      "name": "shared_preferences_windows",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/shared_preferences_windows-2.4.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.3"
     },
     {
       "name": "sky_engine",
@@ -458,12 +386,6 @@
       "languageVersion": "3.5"
     },
     {
-      "name": "timezone",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/timezone-0.10.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
       "name": "typed_data",
       "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/typed_data-1.4.0",
       "packageUri": "lib/",
@@ -500,16 +422,10 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "xml",
-      "rootUri": "file:///Users/johnluc/.pub-cache/hosted/pub.dev/xml-6.5.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.2"
-    },
-    {
       "name": "citoyen_app",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.0"
     }
   ],
   "generator": "pub",

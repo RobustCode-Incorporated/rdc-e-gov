@@ -4,26 +4,6 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>DKImagePickerController-DKImagePickerController.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>DKImagePickerController.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>DKPhotoGallery-DKPhotoGallery.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>DKPhotoGallery.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>Flutter.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -39,42 +19,12 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>SDWebImage-SDWebImage.xcscheme</key>
+		<key>flutter_secure_storage-flutter_secure_storage.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>SDWebImage.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>SwiftyGif-SwiftyGif.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>SwiftyGif.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>file_picker-file_picker_ios_privacy.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>file_picker.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>flutter_local_notifications-flutter_local_notifications_privacy.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>flutter_local_notifications.xcscheme</key>
+		<key>flutter_secure_storage.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -95,16 +45,6 @@
 			<false/>
 		</dict>
 		<key>path_provider_foundation.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>shared_preferences_foundation-shared_preferences_foundation_privacy.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>shared_preferences_foundation.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>

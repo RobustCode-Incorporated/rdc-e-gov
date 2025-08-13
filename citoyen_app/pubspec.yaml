@@ -1,0 +1,31 @@
+name: citoyen_app
+description: A new Flutter project.
+# The following line ensures that your project uses the Material Design theme.
+# To add assets to your application, add an assets section, like this:
+environment: # AJOUTEZ CETTE SECTION
+  sdk: '>=3.0.0 <4.0.0' # Ou '>=3.x.x <4.0.0' pour être plus spécifique, ex: '>=3.1.0 <4.0.0'
+
+# The following section adds the packages and plugins your application needs.
+# To add assets to your application, add an assets section, like this:
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  http: ^1.2.1
+  provider: ^6.1.2
+  intl: ^0.19.0
+  flutter_secure_storage: ^9.0.0
+  image_picker: ^1.1.2
+  google_fonts: ^6.2.1
+
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/ # Assurez-vous que ce chemin est correct si vous l'avez

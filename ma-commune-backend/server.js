@@ -1,4 +1,6 @@
 require('dotenv').config();
+
+
 const express = require('express');
 const cors = require('cors');
 
@@ -14,6 +16,8 @@ const demandeRoutes = require('./routes/demandeRoutes');
 const statutRoutes = require('./routes/statutRoutes');
 const provinceRoutes = require('./routes/provinceRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const authRoutes = require('./routes/authRoutes');
+
 
 const app = express();
 
@@ -36,6 +40,10 @@ app.use('/api/demandes', demandeRoutes);
 app.use('/api/statuts', statutRoutes);
 app.use('/api/provinces', provinceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
+// Routes publiques pour l’authentification
+app.use('/api/auth', authRoutes);
+
 
 // Connexion à la base de données + Synchronisation des modèles
 db.sequelize.sync({ alter: true }) // 'alter: true' ajuste les tables sans supprimer les données
