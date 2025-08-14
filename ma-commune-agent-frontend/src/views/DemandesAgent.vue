@@ -34,7 +34,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in pagedDemandes" :key="d.id" v-if="d && d.id">
+          <tr v-for="d in pagedDemandes" :key="d.id">
             <td>{{ typeLabel(d.typeDemande) }}</td>
             <td>{{ fullname(d.citoyen || {}) }}</td>
             <td>{{ d.statut && d.statut.nom ? d.statut.nom : '—' }}</td>

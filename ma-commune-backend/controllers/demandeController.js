@@ -86,6 +86,53 @@ module.exports = {
     }
   },
 
+  // NOUVELLE FONCTION VALIDE DEMANDE
+  async getDemandesToValidate(req, res) {
+    try {
+      // La correction est ici : on filtre sur le nom du statut via la table Statut
+      const demandes = await Demande.findAll({
+        // On inclut le modèle Statut pour pouvoir y faire référence dans le where
+        include: [
+          { 
+            model: Citoyen, as: 'citoyen' 
+          }, 
+          { 
+            model: Statut, 
+            as: 'statut', 
+            // C'est ici que l'on filtre. On cherche les statuts dont le nom est 'en_traitement'
+            where: { nom: 'en_traitement' } 
+          }, 
+          { 
+            model: Agent, as: 'agent' 
+          }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+      res.json(demandes);
+    } catch (error) {
+      console.error('Erreur getDemandesToValidate:', error);
+      res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+  },
+
+  async getOneDemande(req, res) {
+    try {
+      const { id } = req.params;
+      const demande = await Demande.findByPk(id, {
+        include: [{ model: Citoyen, as: 'citoyen' }, { model: Statut, as: 'statut' }, { model: Agent, as: 'agent' }]
+      });
+  
+      if (!demande) {
+        return res.status(404).json({ message: "Demande non trouvée." });
+      }
+  
+      res.json(demande);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la demande:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  },
+
   // NOUVELLE FONCTION : Pour récupérer tous les statuts
   async getAllStatuts(req, res) {
     try {

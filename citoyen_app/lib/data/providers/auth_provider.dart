@@ -9,35 +9,33 @@ class AuthProvider with ChangeNotifier {
   final CitoyenRepository _citoyenRepository = CitoyenRepository();
 
   Citoyen? _currentCitoyen;
-  String? _token; // Nouveau : stocke le token directement dans le provider
+  String? _token;
   bool _isLoading = false;
   String? _errorMessage;
 
   Citoyen? get currentCitoyen => _currentCitoyen;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  String? get authToken => _token; // Nouveau getter pour le token en mémoire
+  String? get authToken => _token;
 
-  /// Vérifie le statut d'authentification au démarrage de l'application.
-  /// Tente de récupérer le profil si un token est déjà présent.
-  @override
+  /// Checks the authentication status on app startup.
+  /// Attempts to retrieve the profile if a token is already present.
   Future<void> checkAuthStatus() async {
     _isLoading = true;
     notifyListeners();
     try {
-      final storedToken = await _authRepository.getAuthToken(); // Obtient le token du stockage
+      final storedToken = await _authRepository.getAuthToken();
       if (storedToken != null && storedToken.isNotEmpty) {
-        _token = storedToken; // Définit le token interne
-        // Utilise le token interne pour récupérer le profil
+        _token = storedToken;
         _currentCitoyen = await _citoyenRepository.getMyProfile(token: _token);
       } else {
-        _token = null; // Aucun token valide, donc pas de citoyen connecté
+        _token = null;
         _currentCitoyen = null;
       }
     } catch (e) {
       print('DEBUG AuthProvider: Erreur lors de la vérification d\'authentification: $e');
-      await _authRepository.logout(); // Déconnexion en cas d'erreur grave
-      _token = null; // Vide le token interne
+      await _authRepository.logout();
+      _token = null;
       _errorMessage = 'Session expirée ou invalide. Veuillez vous reconnecter.';
       _currentCitoyen = null;
     } finally {
@@ -46,9 +44,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Tente de connecter l'utilisateur.
-  /// Met à jour l'état du citoyen et l'état de chargement/erreur.
-  @override
+  /// Tries to log in the user.
+  /// Updates the citizen's state and loading/error status.
   Future<bool> login(String numeroUnique, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -57,7 +54,7 @@ class AuthProvider with ChangeNotifier {
       final newToken = await _authRepository.login(numeroUnique, password);
       
       if (newToken != null) {
-        _token = newToken; // Définit le token interne après une connexion réussie
+        _token = newToken;
         _currentCitoyen = await _citoyenRepository.getMyProfile(token: _token);
         _isLoading = false;
         notifyListeners();
@@ -75,20 +72,30 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Tente d'inscrire un nouvel utilisateur.
-  /// Si l'inscription réussit, le citoyen est automatiquement connecté.
-  @override
+  /// Tries to register a new user.
+  /// If registration is successful, the citizen is automatically logged in.
   Future<bool> register(Map<String, dynamic> citoyenData) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      final newCitoyen = await _authRepository.register(citoyenData);
-      _token = await _authRepository.getAuthToken(); // Récupère le token après l'inscription (il est sauvegardé par le repo)
-      _currentCitoyen = newCitoyen;
+      final newToken = await _authRepository.register(citoyenData);
+      
+      if (newToken != null) {
+        _token = newToken; // Sets the internal token
+        // Uses the new token to fetch the citizen's profile
+        _currentCitoyen = await _citoyenRepository.getMyProfile(token: _token);
+        
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      
+      _errorMessage = 'Échec de l\'inscription: Token non reçu.';
       _isLoading = false;
       notifyListeners();
-      return true;
+      return false;
+      
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
@@ -97,13 +104,12 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Déconnecte l'utilisateur en supprimant le token et en réinitialisant le profil.
-  @override
+  /// Logs out the user by deleting the stored token and resetting the profile.
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
     await _authRepository.logout();
-    _token = null; // Efface le token interne à la déconnexion
+    _token = null;
     _currentCitoyen = null;
     _isLoading = false;
     notifyListeners();

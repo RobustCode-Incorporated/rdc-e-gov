@@ -1,4 +1,4 @@
-import 'dart:convert'; // Importez ceci pour jsonEncode
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +8,7 @@ import 'package:citoyen_app/data/models/province_model.dart';
 import 'package:citoyen_app/data/providers/auth_provider.dart';
 import 'package:citoyen_app/data/providers/commune_provider.dart';
 import 'package:citoyen_app/data/providers/demande_provider.dart';
+import 'package:citoyen_app/utils/app_router.dart';
 
 class FormActeNaissanceScreen extends StatefulWidget {
   const FormActeNaissanceScreen({super.key});
@@ -18,23 +19,20 @@ class FormActeNaissanceScreen extends StatefulWidget {
 
 class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
   final _formKey = GlobalKey<FormState>();
-  // NOUVEAU : Contrôleurs pour le nom de l'enfant
   final TextEditingController _nomEnfantController = TextEditingController();
   final TextEditingController _postnomEnfantController = TextEditingController();
   final TextEditingController _prenomEnfantController = TextEditingController();
   final TextEditingController _enfantDateNaissanceController = TextEditingController();
   final TextEditingController _enfantLieuNaissanceController = TextEditingController();
-
   final TextEditingController _nomPereController = TextEditingController();
   final TextEditingController _prenomPereController = TextEditingController();
   final TextEditingController _nomMereController = TextEditingController();
   final TextEditingController _prenomMereController = TextEditingController();
   
-  // NOUVEAU : Variable d'état pour le sexe de l'enfant
   String? _selectedSexeEnfant;
-
   Province? _selectedProvinceNaissanceEnfant;
   Commune? _selectedCommuneNaissanceEnfant;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -46,7 +44,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
 
   @override
   void dispose() {
-    // NOUVEAU : Dispose des contrôleurs pour le nom de l'enfant
     _nomEnfantController.dispose();
     _postnomEnfantController.dispose();
     _prenomEnfantController.dispose();
@@ -91,12 +88,14 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppColors.primaryRed : AppColors.primaryBlue,
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.primaryRed : AppColors.primaryBlue,
+        ),
+      );
+    }
   }
 
   @override
@@ -133,7 +132,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
-                    // NOUVEAU : Nom de l'enfant
                     TextFormField(
                       controller: _nomEnfantController,
                       decoration: const InputDecoration(
@@ -149,7 +147,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
-                    // NOUVEAU : Postnom de l'enfant (facultatif)
                     TextFormField(
                       controller: _postnomEnfantController,
                       decoration: const InputDecoration(
@@ -159,7 +156,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
-                    // NOUVEAU : Prénom de l'enfant
                     TextFormField(
                       controller: _prenomEnfantController,
                       decoration: const InputDecoration(
@@ -175,7 +171,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
-                    // NOUVEAU : Sexe de l'enfant
                     DropdownButtonFormField<String>(
                       value: _selectedSexeEnfant,
                       decoration: const InputDecoration(
@@ -385,7 +380,7 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 24.0),
-                    demandeProvider.isLoading
+                    _isSubmitting
                         ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
                         : ElevatedButton(
                             onPressed: () async {
@@ -399,35 +394,52 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                                   return;
                                 }
 
-                                final donneesActeNaissance = {
-                                  // NOUVEAU : Champs pour l'enfant
-                                  'nomEnfant': _nomEnfantController.text,
-                                  'postnomEnfant': _postnomEnfantController.text.isEmpty ? null : _postnomEnfantController.text,
-                                  'prenomEnfant': _prenomEnfantController.text,
-                                  'sexeEnfant': _selectedSexeEnfant,
-                                  'dateNaissanceEnfant': _enfantDateNaissanceController.text,
-                                  'lieuNaissanceEnfant': _enfantLieuNaissanceController.text,
-                                  'provinceNaissanceEnfantId': _selectedProvinceNaissanceEnfant!.id,
-                                  'communeNaissanceEnfantId': _selectedCommuneNaissanceEnfant!.id,
-                                  'nomPere': _nomPereController.text,
-                                  'prenomPere': _prenomPereController.text,
-                                  'nomMere': _nomMereController.text,
-                                  'prenomMere': _prenomMereController.text,
-                                };
-
-                                final success = await demandeProvider.createDemande({
-                                  'citoyenId': citoyen.id,
-                                  'communeId': citoyen.commune.id,
-                                  'typeDemande': 'acte_naissance',
-                                  'donneesJson': jsonEncode(donneesActeNaissance),
-                                  'statutId': 1,
+                                setState(() {
+                                  _isSubmitting = true;
                                 });
 
-                                if (success) {
-                                  _showSnackBar('Demande d\'acte de naissance soumise avec succès !');
-                                  Navigator.of(context).pop();
-                                } else {
-                                  _showSnackBar(demandeProvider.errorMessage ?? 'Échec de la soumission de la demande.', isError: true);
+                                try {
+                                  final donneesActeNaissance = {
+                                    'nomEnfant': _nomEnfantController.text,
+                                    'postnomEnfant': _postnomEnfantController.text.isEmpty ? null : _postnomEnfantController.text,
+                                    'prenomEnfant': _prenomEnfantController.text,
+                                    'sexeEnfant': _selectedSexeEnfant,
+                                    'dateNaissanceEnfant': _enfantDateNaissanceController.text,
+                                    'lieuNaissanceEnfant': _enfantLieuNaissanceController.text,
+                                    'provinceNaissanceEnfantId': _selectedProvinceNaissanceEnfant!.id,
+                                    'communeNaissanceEnfantId': _selectedCommuneNaissanceEnfant!.id,
+                                    'nomPere': _nomPereController.text,
+                                    'prenomPere': _prenomPereController.text,
+                                    'nomMere': _nomMereController.text,
+                                    'prenomMere': _prenomMereController.text,
+                                  };
+
+                                  final success = await demandeProvider.createDemande({
+                                    'citoyenId': citoyen.id,
+                                    'communeId': citoyen.commune.id,
+                                    'typeDemande': 'acte_naissance',
+                                    'donneesJson': jsonEncode(donneesActeNaissance),
+                                    'statutId': 1,
+                                  }); // Le token est retiré ici
+
+                                  if (mounted) {
+                                    if (success) {
+                                      _showSnackBar('Demande d\'acte de naissance soumise avec succès !');
+                                      Navigator.of(context).pop();
+                                    } else {
+                                      _showSnackBar(demandeProvider.errorMessage ?? 'Échec de la soumission de la demande.', isError: true);
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    _showSnackBar('Une erreur est survenue: $e', isError: true);
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(() {
+                                      _isSubmitting = false;
+                                    });
+                                  }
                                 }
                               }
                             },
@@ -443,7 +455,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
     );
   }
 
-  // Helper pour afficher les infos pré-remplies
   Widget _buildInfoDisplayRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
