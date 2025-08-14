@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:citoyen_app/config/app_theme.dart';
 import 'package:citoyen_app/data/providers/auth_provider.dart';
-import 'package:citoyen_app/data/providers/commune_provider.dart'; // Pour obtenir le nom de la commune du citoyen
 import 'package:citoyen_app/data/providers/demande_provider.dart';
-import 'package:citoyen_app/data/models/commune_model.dart';
-import 'package:intl/intl.dart'; // NOUVEL IMPORT NÉCESSAIRE pour DateFormat
 
 class FormActeResidenceScreen extends StatefulWidget {
   const FormActeResidenceScreen({super.key});
@@ -56,15 +54,11 @@ class _FormActeResidenceScreenState extends State<FormActeResidenceScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: Consumer2<DemandeProvider, CommuneProvider>(
-              builder: (context, demandeProvider, communeProvider, child) {
-                // Pour afficher le nom de la commune du citoyen
-                final currentCommune = communeProvider.provinces.isNotEmpty && communeProvider.communes.isNotEmpty
-                    ? communeProvider.communes.firstWhere(
-                        (commune) => commune.id == citoyen.communeId,
-                        orElse: () => Commune(id: -1, nom: 'Inconnue', code: '', provinceId: -1),
-                      )
-                    : null;
+            // MODIFICATION: Utilisez Consumer<DemandeProvider> car la commune est déjà dans le citoyen
+            child: Consumer<DemandeProvider>(
+              builder: (context, demandeProvider, child) {
+                // CORRECTION: Accédez directement à l'objet Commune du citoyen
+                final currentCommune = citoyen.commune;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,10 +74,10 @@ class _FormActeResidenceScreenState extends State<FormActeResidenceScreen> {
                     _buildInfoDisplayRow(context, 'Nom', citoyen.nom),
                     _buildInfoDisplayRow(context, 'Postnom', citoyen.postnom),
                     _buildInfoDisplayRow(context, 'Prénom', citoyen.prenom),
-                    // Utilisation de DateFormat qui nécessite l'import intl
                     _buildInfoDisplayRow(context, 'Date de Naissance', DateFormat('dd/MM/yyyy').format(citoyen.dateNaissance)),
                     _buildInfoDisplayRow(context, 'Sexe', citoyen.sexe),
-                    _buildInfoDisplayRow(context, 'Commune de Résidence', currentCommune?.nom ?? 'N/A'),
+                    // CORRECTION: Utilisez l'objet commune directement
+                    _buildInfoDisplayRow(context, 'Commune de Résidence', currentCommune.nom),
                     const SizedBox(height: 24.0),
                     Text(
                       'Détails de la résidence',
@@ -136,7 +130,8 @@ class _FormActeResidenceScreenState extends State<FormActeResidenceScreen> {
 
                                 final success = await demandeProvider.createDemande({
                                   'citoyenId': citoyen.id,
-                                  'communeId': citoyen.communeId,
+                                  // CORRECTION: Accédez à l'ID de la commune via l'objet
+                                  'communeId': citoyen.commune.id,
                                   'typeDemande': 'acte_residence',
                                   'donneesJson': donneesActeResidence,
                                   'statutId': 1, // 'soumise' par défaut
@@ -162,7 +157,6 @@ class _FormActeResidenceScreenState extends State<FormActeResidenceScreen> {
     );
   }
 
-  // Helper pour afficher les infos pré-remplies
   Widget _buildInfoDisplayRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),

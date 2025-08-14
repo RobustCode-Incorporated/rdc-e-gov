@@ -1,3 +1,4 @@
+// lib/utils/api_helper.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -6,54 +7,52 @@ import 'package:citoyen_app/config/app_constants.dart';
 class ApiHelper {
   final _storage = const FlutterSecureStorage();
 
-  // Récupère le token d'authentification
   Future<String?> getAuthToken() async {
     return await _storage.read(key: AppConstants.authTokenKey);
   }
 
-  // Stocke le token d'authentification
   Future<void> saveAuthToken(String token) async {
     await _storage.write(key: AppConstants.authTokenKey, value: token);
   }
 
-  // Supprime le token d'authentification
   Future<void> deleteAuthToken() async {
     await _storage.delete(key: AppConstants.authTokenKey);
   }
 
-  // Helper pour les requêtes GET
   Future<http.Response> get(String path) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}$path');
     final token = await getAuthToken();
+    return getWithToken(path, token);
+  }
 
-    // AJOUT DE DEBUG PRINTS
+  Future<http.Response> getWithToken(String path, String? token) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$path');
     print('DEBUG API: Requête GET vers: $uri');
     print('DEBUG API: Token récupéré: $token');
 
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      // Condition améliorée: n'ajoute le header Authorization que si le token n'est PAS null ET n'est PAS vide
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
-    print('DEBUG API: Headers envoyés: $headers'); // Affiche les headers réellement envoyés
+    print('DEBUG API: Headers envoyés: $headers');
 
     try {
       final response = await http.get(uri, headers: headers);
-      print('DEBUG API: Réponse pour $path - Statut: ${response.statusCode}, Corps (partiel): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}'); // Affiche une partie du corps
+      print('DEBUG API: Réponse pour $path - Statut: ${response.statusCode}, Corps (partiel): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
       return response;
     } catch (e) {
       print('DEBUG API: Erreur lors de la requête GET vers $path: $e');
-      rethrow; // Relance l'exception pour qu'elle soit gérée par le provider
+      rethrow;
     }
   }
 
-  // Helper pour les requêtes POST
-  Future<http.Response> post(String path, Map<String, dynamic> body) async {
+  // MODIFICATION ICI : Ajout d'un paramètre optionnel 'tokenOverride'
+  Future<http.Response> post(String path, Map<String, dynamic> body, {String? tokenOverride}) async {
     final uri = Uri.parse('${AppConstants.baseUrl}$path');
-    final token = await getAuthToken();
+    // Utilise le token fourni en paramètre s'il existe, sinon récupère celui du stockage
+    final token = tokenOverride ?? await getAuthToken();
 
     print('DEBUG API: Requête POST vers: $uri');
-    print('DEBUG API: Token récupéré: $token');
+    print('DEBUG API: Token récupéré: $token'); // Maintenant ce log devrait afficher le token
 
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
@@ -72,7 +71,6 @@ class ApiHelper {
     }
   }
 
-  // Helper pour les requêtes PUT
   Future<http.Response> put(String path, Map<String, dynamic> body) async {
     final uri = Uri.parse('${AppConstants.baseUrl}$path');
     final token = await getAuthToken();
@@ -97,7 +95,6 @@ class ApiHelper {
     }
   }
 
-  // Helper pour les requêtes DELETE (si nécessaire)
   Future<http.Response> delete(String path) async {
     final uri = Uri.parse('${AppConstants.baseUrl}$path');
     final token = await getAuthToken();

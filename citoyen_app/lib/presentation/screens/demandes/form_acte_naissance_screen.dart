@@ -1,3 +1,4 @@
+import 'dart:convert'; // Importez ceci pour jsonEncode
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -17,33 +18,44 @@ class FormActeNaissanceScreen extends StatefulWidget {
 
 class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
   final _formKey = GlobalKey<FormState>();
+  // NOUVEAU : Contrôleurs pour le nom de l'enfant
+  final TextEditingController _nomEnfantController = TextEditingController();
+  final TextEditingController _postnomEnfantController = TextEditingController();
+  final TextEditingController _prenomEnfantController = TextEditingController();
+  final TextEditingController _enfantDateNaissanceController = TextEditingController();
+  final TextEditingController _enfantLieuNaissanceController = TextEditingController();
+
   final TextEditingController _nomPereController = TextEditingController();
   final TextEditingController _prenomPereController = TextEditingController();
   final TextEditingController _nomMereController = TextEditingController();
   final TextEditingController _prenomMereController = TextEditingController();
-  final TextEditingController _enfantDateNaissanceController = TextEditingController();
-  final TextEditingController _enfantLieuNaissanceController = TextEditingController(); // Sera un champ de texte libre
+  
+  // NOUVEAU : Variable d'état pour le sexe de l'enfant
+  String? _selectedSexeEnfant;
 
-  Province? _selectedProvinceNaissanceEnfant; // Pour la province de naissance de l'enfant
-  Commune? _selectedCommuneNaissanceEnfant; // Pour la commune de naissance de l'enfant
+  Province? _selectedProvinceNaissanceEnfant;
+  Commune? _selectedCommuneNaissanceEnfant;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Charge toutes les provinces pour la sélection du lieu de naissance de l'enfant
       Provider.of<CommuneProvider>(context, listen: false).fetchProvinces();
     });
   }
 
   @override
   void dispose() {
+    // NOUVEAU : Dispose des contrôleurs pour le nom de l'enfant
+    _nomEnfantController.dispose();
+    _postnomEnfantController.dispose();
+    _prenomEnfantController.dispose();
+    _enfantDateNaissanceController.dispose();
+    _enfantLieuNaissanceController.dispose();
     _nomPereController.dispose();
     _prenomPereController.dispose();
     _nomMereController.dispose();
     _prenomMereController.dispose();
-    _enfantDateNaissanceController.dispose();
-    _enfantLieuNaissanceController.dispose();
     super.dispose();
   }
 
@@ -57,13 +69,13 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryBlue, // Couleur des sélections
-              onPrimary: Colors.white, // Couleur du texte sur les sélections
-              onSurface: AppColors.darkText, // Couleur du texte sur le calendrier
+              primary: AppColors.primaryBlue,
+              onPrimary: Colors.white,
+              onSurface: AppColors.darkText,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryBlue, // Couleur des boutons Annuler/OK
+                foregroundColor: AppColors.primaryBlue,
               ),
             ),
           ),
@@ -121,6 +133,76 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
+                    // NOUVEAU : Nom de l'enfant
+                    TextFormField(
+                      controller: _nomEnfantController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nom de l\'enfant',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer le nom de l\'enfant';
+                        }
+                        return null;
+                      },
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    // NOUVEAU : Postnom de l'enfant (facultatif)
+                    TextFormField(
+                      controller: _postnomEnfantController,
+                      decoration: const InputDecoration(
+                        labelText: 'Postnom de l\'enfant (Optionnel)',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    // NOUVEAU : Prénom de l'enfant
+                    TextFormField(
+                      controller: _prenomEnfantController,
+                      decoration: const InputDecoration(
+                        labelText: 'Prénom de l\'enfant',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer le prénom de l\'enfant';
+                        }
+                        return null;
+                      },
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    // NOUVEAU : Sexe de l'enfant
+                    DropdownButtonFormField<String>(
+                      value: _selectedSexeEnfant,
+                      decoration: const InputDecoration(
+                        labelText: 'Sexe de l\'enfant',
+                        prefixIcon: Icon(Icons.wc),
+                      ),
+                      hint: const Text('Sélectionnez le sexe de l\'enfant'),
+                      items: <String>['Homme', 'Femme']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedSexeEnfant = newValue;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez sélectionner le sexe de l\'enfant';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _enfantDateNaissanceController,
                       decoration: InputDecoration(
@@ -157,7 +239,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
-                    // Sélection de la Province pour le lieu de naissance de l'enfant
                     DropdownButtonFormField<Province>(
                       decoration: InputDecoration(
                         labelText: 'Province de Naissance de l\'enfant',
@@ -182,7 +263,7 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       onChanged: (Province? newValue) {
                         setState(() {
                           _selectedProvinceNaissanceEnfant = newValue;
-                          _selectedCommuneNaissanceEnfant = null; // Réinitialise la commune
+                          _selectedCommuneNaissanceEnfant = null;
                           if (newValue != null) {
                             communeProvider.fetchCommunesByProvinceId(newValue.id);
                           }
@@ -197,7 +278,6 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                       isExpanded: true,
                     ),
                     const SizedBox(height: 16.0),
-                    // Sélection de la Commune de Naissance de l'enfant
                     DropdownButtonFormField<Commune>(
                       value: _selectedCommuneNaissanceEnfant,
                       decoration: InputDecoration(
@@ -222,7 +302,7 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                         );
                       }).toList(),
                       onChanged: _selectedProvinceNaissanceEnfant == null
-                          ? null // Désactivé si aucune province sélectionnée
+                          ? null
                           : (Commune? newValue) {
                               setState(() {
                                 _selectedCommuneNaissanceEnfant = newValue;
@@ -256,7 +336,7 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                           return 'Veuillez entrer le nom du père';
                         }
                         return null;
-                      },
+                        },
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
@@ -314,29 +394,38 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
                                   _showSnackBar('Veuillez sélectionner la province et la commune de naissance de l\'enfant.', isError: true);
                                   return;
                                 }
+                                if (_selectedSexeEnfant == null) {
+                                  _showSnackBar('Veuillez sélectionner le sexe de l\'enfant.', isError: true);
+                                  return;
+                                }
 
                                 final donneesActeNaissance = {
-                                  'nomPere': _nomPereController.text,
-                                  'prenomPere': _prenomPereController.text,
-                                  'nomMere': _nomMereController.text,
-                                  'prenomMere': _prenomMereController.text,
+                                  // NOUVEAU : Champs pour l'enfant
+                                  'nomEnfant': _nomEnfantController.text,
+                                  'postnomEnfant': _postnomEnfantController.text.isEmpty ? null : _postnomEnfantController.text,
+                                  'prenomEnfant': _prenomEnfantController.text,
+                                  'sexeEnfant': _selectedSexeEnfant,
                                   'dateNaissanceEnfant': _enfantDateNaissanceController.text,
                                   'lieuNaissanceEnfant': _enfantLieuNaissanceController.text,
                                   'provinceNaissanceEnfantId': _selectedProvinceNaissanceEnfant!.id,
                                   'communeNaissanceEnfantId': _selectedCommuneNaissanceEnfant!.id,
+                                  'nomPere': _nomPereController.text,
+                                  'prenomPere': _prenomPereController.text,
+                                  'nomMere': _nomMereController.text,
+                                  'prenomMere': _prenomMereController.text,
                                 };
 
                                 final success = await demandeProvider.createDemande({
-                                  'citoyenId': citoyen.id, // ID du citoyen connecté
-                                  'communeId': citoyen.communeId, // Commune du citoyen connecté (pour association)
+                                  'citoyenId': citoyen.id,
+                                  'communeId': citoyen.commune.id,
                                   'typeDemande': 'acte_naissance',
-                                  'donneesJson': donneesActeNaissance,
-                                  'statutId': 1, // 'soumise' par défaut
+                                  'donneesJson': jsonEncode(donneesActeNaissance),
+                                  'statutId': 1,
                                 });
 
                                 if (success) {
                                   _showSnackBar('Demande d\'acte de naissance soumise avec succès !');
-                                  Navigator.of(context).pop(); // Revenir à la liste des demandes ou dashboard
+                                  Navigator.of(context).pop();
                                 } else {
                                   _showSnackBar(demandeProvider.errorMessage ?? 'Échec de la soumission de la demande.', isError: true);
                                 }
@@ -350,6 +439,37 @@ class _FormActeNaissanceScreenState extends State<FormActeNaissanceScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper pour afficher les infos pré-remplies
+  Widget _buildInfoDisplayRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              '$label :',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkText,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.brownText,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

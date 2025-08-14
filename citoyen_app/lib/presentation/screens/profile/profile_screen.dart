@@ -25,11 +25,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Au démarrage de l'écran, charge le profil du citoyen et les provinces/communes
+    // Au démarrage de l'écran, charge le profil du citoyen
+    // Note: Le profil du citoyen inclut déjà la commune, donc pas besoin de charger les communes séparément pour afficher le nom.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CitoyenProvider>(context, listen: false).fetchProfile();
-      // Charger les provinces est nécessaire pour ensuite charger les communes et trouver le nom de la commune du citoyen
-      Provider.of<CommuneProvider>(context, listen: false).fetchProvinces();
     });
   }
 
@@ -99,16 +98,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<CitoyenProvider, CommuneProvider>(
-      builder: (context, citoyenProvider, communeProvider, child) {
+    return Consumer<CitoyenProvider>( // MODIFIÉ : Nous n'avons plus besoin de CommuneProvider ici
+      builder: (context, citoyenProvider, child) {
         final Citoyen? citoyen = citoyenProvider.profile;
-        // Tente de trouver la commune du citoyen dans la liste des communes chargées
-        final Commune? citoyenCommune = communeProvider.communes.isNotEmpty && citoyen != null
-            ? communeProvider.communes.firstWhere(
-                (commune) => commune.id == citoyen.communeId,
-                orElse: () => Commune(id: -1, nom: 'Inconnue', code: '', provinceId: -1), // Valeur par défaut si non trouvée
-              )
-            : null;
+
+        // CORRECTION MAJEURE ICI : La commune est déjà dans l'objet citoyen
+        final Commune? citoyenCommune = citoyen?.commune;
 
         // Affiche un indicateur de chargement si le profil est en cours de récupération
         if (citoyenProvider.isLoading) {
@@ -136,18 +131,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   CircleAvatar(
                     radius: 70,
                     backgroundColor: AppColors.mediumGray.withOpacity(0.3),
-                    // Si une image locale a été sélectionnée, utilisez-la
-                    // Sinon, si le citoyen a une URL de photo de profil (à ajouter au modèle Citoyen), utilisez NetworkImage
-                    // Sinon, utilisez des images de placeholder par défaut
                     backgroundImage: _imageFile != null
                         ? FileImage(_imageFile!)
-                        // Si le modèle Citoyen avait une propriété 'profileImageUrl' :
-                        // : citoyen.profileImageUrl != null && citoyen.profileImageUrl!.isNotEmpty
-                        //     ? NetworkImage(citoyen.profileImageUrl!)
-                            : (citoyen.sexe == 'Homme' ? const AssetImage('assets/images/placeholder_male.png') : const AssetImage('assets/images/placeholder_female.png')) as ImageProvider,
+                        : (citoyen.sexe == 'Homme' ? const AssetImage('assets/images/placeholder_male.png') : const AssetImage('assets/images/placeholder_female.png')) as ImageProvider,
                     child: _imageFile == null && 
-                           // Vérifiez aussi si citoyen.profileImageUrl est vide/null ici
-                           (citoyen.sexe != 'Homme' && citoyen.sexe != 'Femme') // Afficher l'icône générique si le sexe n'est pas clair
+                           (citoyen.sexe != 'Homme' && citoyen.sexe != 'Femme')
                         ? Icon(Icons.person, size: 80, color: AppColors.primaryBlue.withOpacity(0.7))
                         : null,
                   ),
@@ -191,11 +179,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildProfileInfoRow(context, 'Sexe', citoyen.sexe),
               _buildProfileInfoRow(context, 'Lieu de Naissance', citoyen.lieuNaissance),
               _buildProfileInfoRow(context, 'Commune de Résidence', citoyenCommune?.nom ?? 'N/A'),
-              // Ajoutez d'autres informations pertinentes si tu les as dans ton modèle Citoyen
               const SizedBox(height: 32.0),
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Naviguer vers un écran d'édition de profil
                   _showSnackBar('Fonctionnalité d\'édition de profil à implémenter.');
                 },
                 icon: const Icon(Icons.edit),
@@ -207,7 +193,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16.0),
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Naviguer vers un écran de changement de mot de passe
                   _showSnackBar('Fonctionnalité de changement de mot de passe à implémenter.');
                 },
                 icon: const Icon(Icons.vpn_key),
@@ -220,12 +205,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16.0),
               ElevatedButton.icon(
                 onPressed: () async {
-                  // Utilise le AuthProvider pour la déconnexion
                   await Provider.of<AuthProvider>(context, listen: false).logout();
-                  // Redirige vers l'écran de connexion après déconnexion
-                  // CORRECTION : Retire le 'const' ici
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => LoginScreen()), // Retire 'const'
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
                     (Route<dynamic> route) => false,
                   );
                 },
@@ -243,7 +225,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Widget utilitaire pour afficher une ligne d'information du profil
   Widget _buildProfileInfoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

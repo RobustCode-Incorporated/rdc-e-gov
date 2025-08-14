@@ -1,5 +1,5 @@
 // controllers/demandeController.js
-const { Demande, Citoyen, Statut, Agent } = require('../models');
+const { Demande, Citoyen, Statut, Agent } = require('../models'); // Assurez-vous que Statut est bien importé
 
 module.exports = {
   async getAllDemandes(req, res) {
@@ -68,6 +68,7 @@ module.exports = {
   // Nouvelle route : récupérer les demandes du citoyen connecté
   async getMyDemandes(req, res) {
     try {
+      // Le middleware authMiddleware s'assure déjà du rôle, mais une vérification défensive est bien.
       if (!req.user || req.user.role !== 'citoyen') {
         return res.status(403).json({ message: 'Accès interdit : rôle insuffisant' });
       }
@@ -82,6 +83,18 @@ module.exports = {
     } catch (error) {
       console.error('Erreur getMyDemandes:', error);
       res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+  },
+
+  // NOUVELLE FONCTION : Pour récupérer tous les statuts
+  async getAllStatuts(req, res) {
+    try {
+      // S'assure que le modèle Statut est bien importé en haut du fichier
+      const statuts = await Statut.findAll();
+      return res.status(200).json(statuts);
+    } catch (error) {
+      console.error('Erreur getAllStatuts:', error);
+      return res.status(500).json({ message: 'Erreur serveur lors de la récupération des statuts', error: error.message });
     }
   }
 };

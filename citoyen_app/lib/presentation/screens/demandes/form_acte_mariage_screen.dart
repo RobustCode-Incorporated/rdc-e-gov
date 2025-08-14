@@ -269,7 +269,7 @@ class _FormActeMariageScreenState extends State<FormActeMariageScreen> {
 
                                 final success = await demandeProvider.createDemande({
                                   'citoyenId': citoyen.id,
-                                  'communeId': citoyen.communeId,
+                                  'communeId': citoyen.commune.id,
                                   'typeDemande': 'acte_mariage',
                                   'donneesJson': donneesActeMariage,
                                   'statutId': 1, // 'soumise' par défaut

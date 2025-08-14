@@ -269,7 +269,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
 
                                 final success = await demandeProvider.createDemande({
                                   'citoyenId': citoyen.id,
-                                  'communeId': citoyen.communeId,
+                                  'communeId': citoyen.commune.id,
                                   'typeDemande': 'carte_identite',
                                   'donneesJson': donneesCarteIdentite,
                                   'statutId': 1, // 'soumise' par défaut

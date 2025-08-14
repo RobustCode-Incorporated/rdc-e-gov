@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:citoyen_app/config/app_theme.dart';
 import 'package:citoyen_app/data/models/demande_model.dart';
-// Potentiellement besoin des modèles Province/Commune si tu veux afficher leurs noms complets
-// import 'package:citoyen_app/data/models/commune_model.dart';
-// import 'package:citoyen_app/data/models/province_model.dart';
-// import 'package:citoyen_app/data/providers/commune_provider.dart';
-// import 'package:provider/provider.dart';
+// Suppression de 'dart:convert' car jsonDecode n'est plus nécessaire ici
 
 class DemandeDetailScreen extends StatelessWidget {
   final Demande demande;
@@ -65,24 +61,30 @@ class DemandeDetailScreen extends StatelessWidget {
 
   // Widget pour afficher les données spécifiques à chaque type de demande
   Widget _buildSpecificDemandeDetails(BuildContext context, Demande demande) {
-    final Map<String, dynamic> donnees = demande.donneesJson;
+    // CORRECTION : donnesJson est déjà un Map<String, dynamic> si le backend renvoie un objet JSON
+    final Map<String, dynamic> donnees = demande.donneesJson; 
 
     switch (demande.typeDemande) {
       case 'acte_naissance':
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Détails Acte de Naissance', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text('Informations sur l\'enfant', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            const Divider(),
+            _buildInfoRow(context, 'Nom Enfant', donnees['nomEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'Postnom Enfant', donnees['postnomEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'Prénom Enfant', donnees['prenomEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'Sexe Enfant', donnees['sexeEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'Date de Naissance Enfant', donnees['dateNaissanceEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'Lieu de Naissance Enfant', donnees['lieuNaissanceEnfant'] ?? 'N/A'),
+            _buildInfoRow(context, 'ID Commune Naissance Enfant', donnees['communeNaissanceEnfantId']?.toString() ?? 'N/A'),
+            const SizedBox(height: 16.0),
+            Text('Informations sur les parents', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const Divider(),
             _buildInfoRow(context, 'Nom du Père', donnees['nomPere'] ?? 'N/A'),
             _buildInfoRow(context, 'Prénom du Père', donnees['prenomPere'] ?? 'N/A'),
             _buildInfoRow(context, 'Nom de la Mère', donnees['nomMere'] ?? 'N/A'),
             _buildInfoRow(context, 'Prénom de la Mère', donnees['prenomMere'] ?? 'N/A'),
-            _buildInfoRow(context, 'Date de Naissance Enfant', donnees['dateNaissanceEnfant'] ?? 'N/A'),
-            _buildInfoRow(context, 'Lieu de Naissance Enfant', donnees['lieuNaissanceEnfant'] ?? 'N/A'),
-            _buildInfoRow(context, 'ID Commune Naissance Enfant', donnees['communeNaissanceEnfantId']?.toString() ?? 'N/A'),
-            // Si tu as besoin d'afficher le nom de la commune, tu devras charger les communes ici
-            // en utilisant un Consumer<CommuneProvider>
           ],
         );
       case 'carte_identite':
@@ -150,7 +152,8 @@ class DemandeDetailScreen extends StatelessWidget {
           children: [
             Text('Données Spécifiques (JSON brut)', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const Divider(),
-            Text(demande.donneesJson.toString()), // Affiche le JSON brut si non reconnu
+            // Affiche le JSON brut si non reconnu (assurez-vous que c'est bien une chaîne si non mappé)
+            Text(demande.donneesJson.toString()), 
           ],
         );
     }

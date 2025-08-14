@@ -1,48 +1,54 @@
 import 'dart:convert';
-import 'package:citoyen_app/data/models/citoyen_model.dart'; // Importe le modèle Citoyen
-import 'package:citoyen_app/utils/api_helper.dart'; // Importe la classe utilitaire pour les appels API
-import 'package:http/http.dart' as http; // Importe le package http pour les requêtes
+import 'package:citoyen_app/data/models/citoyen_model.dart';
+import 'package:citoyen_app/utils/api_helper.dart';
+import 'package:http/http.dart' as http;
 
 class AuthRepository {
-  final ApiHelper _apiHelper = ApiHelper(); // Instance de l'helper API
+  final ApiHelper _apiHelper = ApiHelper();
 
-  /// Tente de connecter un utilisateur avec son numéro unique et mot de passe.
-  /// Retourne le token JWT en cas de succès, null en cas d'échec.
+  // NOUVEAU : Méthode pour obtenir le token d'authentification
+  /// Délègue la récupération du token à ApiHelper.
+  Future<String?> getAuthToken() async {
+    return await _apiHelper.getAuthToken();
+  }
+
+  /// Tente de connecter un utilisateur et retourne le token JWT en cas de succès.
   Future<String?> login(String numeroUnique, String password) async {
     final response = await _apiHelper.post(
-      '/auth/login', // Assure-toi que cette route correspond à ton backend Node.js
-      {'username': numeroUnique, 'password': password, 'role': 'citoyen'}, // Utilise 'username' et ajoute 'role' pour le login générique
+      '/auth/login',
+      {'username': numeroUnique, 'password': password, 'role': 'citoyen'},
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final token = data['token']; // Le token devrait être renvoyé dans le corps de la réponse
-      await _apiHelper.saveAuthToken(token); // Stocke le token de manière sécurisée
-      return token;
+      final token = data['token'];
+      if (token != null) {
+        await _apiHelper.saveAuthToken(token);
+        print('DEBUG AuthRepository: Nouveau token sauvegardé avec succès.');
+        return token;
+      }
+      throw Exception('Token non reçu dans la réponse du serveur.');
     } else {
-      // Lance une exception en cas d'échec de connexion pour être gérée par le Provider
       throw Exception('Échec de la connexion: ${jsonDecode(response.body)['message'] ?? response.body}');
     }
   }
 
   /// Tente d'inscrire un nouveau citoyen.
-  /// Enregistre le token et retourne l'objet Citoyen créé pour permettre la connexion automatique.
+  /// Enregistre le token et retourne l'objet Citoyen créé pour la connexion automatique.
   Future<Citoyen> register(Map<String, dynamic> citoyenData) async {
     final response = await _apiHelper.post(
-      '/auth/register', // Assure-toi que cette route correspond à ton backend Node.js
+      '/auth/register',
       citoyenData,
     );
 
-    if (response.statusCode == 201) { // 201 Created est le code attendu pour une création réussie
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      final token = data['token']; // Récupère le token de la réponse
-      await _apiHelper.saveAuthToken(token); // Enregistre le token de manière sécurisée
-
-      // Retourne l'objet citoyen renvoyé par le backend
-      // Assure-toi que ton backend renvoie bien l'objet citoyen sous la clé 'citoyen'
+      final token = data['token'];
+      if (token != null) {
+        await _apiHelper.saveAuthToken(token);
+      }
       return Citoyen.fromJson(data['citoyen']);
     } else {
-      // Lance une exception en cas d'échec d'inscription
       throw Exception('Échec de l\'inscription: ${jsonDecode(response.body)['message'] ?? response.body}');
     }
   }
@@ -50,10 +56,10 @@ class AuthRepository {
   /// Déconnecte l'utilisateur en supprimant le token stocké.
   Future<void> logout() async {
     await _apiHelper.deleteAuthToken();
+    print('DEBUG AuthRepository: Token supprimé.');
   }
 
-  /// Vérifie si un token d'authentification est actuellement stocké,
-  /// indiquant si l'utilisateur est potentiellement connecté.
+  /// Vérifie si un token d'authentification est actuellement stocké.
   Future<bool> isAuthenticated() async {
     final token = await _apiHelper.getAuthToken();
     return token != null && token.isNotEmpty;

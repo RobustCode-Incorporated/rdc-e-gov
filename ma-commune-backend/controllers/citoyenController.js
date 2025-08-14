@@ -1,4 +1,4 @@
-const { Citoyen } = require('../models');
+const { Citoyen, Commune } = require('../models');
 
 exports.getAllCitoyens = async (req, res) => {
   try {

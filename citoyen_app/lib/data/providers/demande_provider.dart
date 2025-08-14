@@ -1,17 +1,22 @@
+// lib/data/providers/demande_provider.dart
 import 'package:flutter/material.dart';
 import 'package:citoyen_app/data/models/demande_model.dart';
 import 'package:citoyen_app/data/models/statut_model.dart';
 import 'package:citoyen_app/data/repositories/demande_repository.dart';
+import 'package:citoyen_app/data/providers/auth_provider.dart'; // Importe AuthProvider
 
 class DemandeProvider with ChangeNotifier {
   final DemandeRepository _demandeRepository = DemandeRepository();
-  List<Demande> _demandes = []; // Liste de toutes les demandes du citoyen
-  List<Demande> _validatedDocuments = []; // Liste des documents validés
-  List<Statut> _statuts = []; // Liste des statuts disponibles (soumise, en traitement, validée)
-  bool _isLoading = false; // État de chargement
-  String? _errorMessage; // Message d'erreur
+  List<Demande> _demandes = [];
+  List<Demande> _validatedDocuments = [];
+  List<Statut> _statuts = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // Getters pour accéder aux données et à l'état
+  final AuthProvider _authProvider; // Référence à AuthProvider
+
+  DemandeProvider(this._authProvider); // Constructeur pour injection
+
   List<Demande> get demandes => _demandes;
   List<Demande> get validatedDocuments => _validatedDocuments;
   List<Statut> get statuts => _statuts;
@@ -19,6 +24,7 @@ class DemandeProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   /// Récupère toutes les demandes effectuées par le citoyen connecté.
+  @override
   Future<void> fetchMyDemandes() async {
     _isLoading = true;
     _errorMessage = null;
@@ -34,6 +40,7 @@ class DemandeProvider with ChangeNotifier {
   }
 
   /// Récupère la liste de tous les statuts possibles (ex: soumise, en traitement, validée).
+  @override
   Future<void> fetchStatuts() async {
     _isLoading = true;
     _errorMessage = null;
@@ -49,14 +56,25 @@ class DemandeProvider with ChangeNotifier {
   }
 
   /// Crée une nouvelle demande de document.
+  /// Récupère le token directement de l'AuthProvider et le passe au repository.
+  @override
   Future<bool> createDemande(Map<String, dynamic> demandeData) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      await _demandeRepository.createDemande(demandeData);
-      // Actualise la liste des demandes après la création pour que l'UI se mette à jour
-      await fetchMyDemandes(); 
+      // Récupère le token directement de l'état de l'AuthProvider (qui devrait être à jour)
+      final String? authToken = _authProvider.authToken; // Appel direct sans await
+
+      if (authToken == null) {
+        _errorMessage = 'Token d\'authentification manquant. Veuillez vous reconnecter.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      await _demandeRepository.createDemande(demandeData, authToken: authToken); // Passe le token
+      await fetchMyDemandes(); // Actualise la liste des demandes après la création
       _isLoading = false;
       notifyListeners();
       return true;
@@ -69,6 +87,7 @@ class DemandeProvider with ChangeNotifier {
   }
 
   /// Récupère les documents qui ont été validés pour le citoyen.
+  @override
   Future<void> fetchValidatedDocuments() async {
     _isLoading = true;
     _errorMessage = null;
@@ -84,13 +103,13 @@ class DemandeProvider with ChangeNotifier {
   }
 
   /// Lance le téléchargement d'un document validé.
+  @override
   Future<void> downloadDocument(int demandeId) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
       await _demandeRepository.downloadDocument(demandeId);
-      // Pas de changement d'état particulier ici car le téléchargement est externe
     } catch (e) {
       _errorMessage = 'Erreur lors du téléchargement du document: $e';
     } finally {

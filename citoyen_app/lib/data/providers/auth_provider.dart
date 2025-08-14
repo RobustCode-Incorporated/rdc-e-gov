@@ -1,61 +1,74 @@
+// lib/data/providers/auth_provider.dart
 import 'package:flutter/material.dart';
-import 'package:citoyen_app/data/models/citoyen_model.dart'; // Importe le modèle Citoyen
-import 'package:citoyen_app/data/repositories/auth_repository.dart'; // Importe le repository d'authentification
-import 'package:citoyen_app/data/repositories/citoyen_repository.dart'; // Importe le repository Citoyen pour récupérer le profil
+import 'package:citoyen_app/data/models/citoyen_model.dart';
+import 'package:citoyen_app/data/repositories/auth_repository.dart';
+import 'package:citoyen_app/data/repositories/citoyen_repository.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
   final CitoyenRepository _citoyenRepository = CitoyenRepository();
 
-  Citoyen? _currentCitoyen; // Le citoyen actuellement connecté
-  bool _isLoading = false; // Indique si une opération est en cours (connexion, inscription)
-  String? _errorMessage; // Stocke un message d'erreur si une opération échoue
+  Citoyen? _currentCitoyen;
+  String? _token; // Nouveau : stocke le token directement dans le provider
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // Getters pour accéder à l'état depuis les widgets
   Citoyen? get currentCitoyen => _currentCitoyen;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get authToken => _token; // Nouveau getter pour le token en mémoire
 
   /// Vérifie le statut d'authentification au démarrage de l'application.
   /// Tente de récupérer le profil si un token est déjà présent.
+  @override
   Future<void> checkAuthStatus() async {
     _isLoading = true;
-    notifyListeners(); // Informe les écouteurs que le chargement commence
+    notifyListeners();
     try {
-      final isAuthenticated = await _authRepository.isAuthenticated();
-      if (isAuthenticated) {
-        // Si authentifié, tente de récupérer les informations complètes du citoyen
-        _currentCitoyen = await _citoyenRepository.getMyProfile();
+      final storedToken = await _authRepository.getAuthToken(); // Obtient le token du stockage
+      if (storedToken != null && storedToken.isNotEmpty) {
+        _token = storedToken; // Définit le token interne
+        // Utilise le token interne pour récupérer le profil
+        _currentCitoyen = await _citoyenRepository.getMyProfile(token: _token);
       } else {
-        _currentCitoyen = null; // Aucun citoyen connecté
+        _token = null; // Aucun token valide, donc pas de citoyen connecté
+        _currentCitoyen = null;
       }
     } catch (e) {
-      // En cas d'erreur de vérification (ex: token expiré ou invalide), on déconnecte
       print('DEBUG AuthProvider: Erreur lors de la vérification d\'authentification: $e');
-      await _authRepository.logout(); // ⭐ CORRECTION ICI : Appel à logout() de AuthRepository
+      await _authRepository.logout(); // Déconnexion en cas d'erreur grave
+      _token = null; // Vide le token interne
       _errorMessage = 'Session expirée ou invalide. Veuillez vous reconnecter.';
-      _currentCitoyen = null; // S'assurer que le profil est nul en cas d'erreur
+      _currentCitoyen = null;
     } finally {
       _isLoading = false;
-      notifyListeners(); // Informe les écouteurs que le chargement est terminé
+      notifyListeners();
     }
   }
 
   /// Tente de connecter l'utilisateur.
   /// Met à jour l'état du citoyen et l'état de chargement/erreur.
+  @override
   Future<bool> login(String numeroUnique, String password) async {
     _isLoading = true;
-    _errorMessage = null; // Réinitialise l'erreur précédente
+    _errorMessage = null;
     notifyListeners();
     try {
-      await _authRepository.login(numeroUnique, password);
-      // Après une connexion réussie, récupère les informations complètes du citoyen
-      _currentCitoyen = await _citoyenRepository.getMyProfile();
+      final newToken = await _authRepository.login(numeroUnique, password);
+      
+      if (newToken != null) {
+        _token = newToken; // Définit le token interne après une connexion réussie
+        _currentCitoyen = await _citoyenRepository.getMyProfile(token: _token);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _errorMessage = 'Échec de la connexion: Token non reçu.';
       _isLoading = false;
       notifyListeners();
-      return true;
+      return false;
     } catch (e) {
-      _errorMessage = e.toString(); // Convertit l'exception en String
+      _errorMessage = e.toString();
       _isLoading = false;
       notifyListeners();
       return false;
@@ -64,14 +77,15 @@ class AuthProvider with ChangeNotifier {
 
   /// Tente d'inscrire un nouvel utilisateur.
   /// Si l'inscription réussit, le citoyen est automatiquement connecté.
+  @override
   Future<bool> register(Map<String, dynamic> citoyenData) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      // Le repository enregistre le token et nous renvoie l'objet Citoyen créé
       final newCitoyen = await _authRepository.register(citoyenData);
-      _currentCitoyen = newCitoyen; // Définit le citoyen actuel après l'inscription
+      _token = await _authRepository.getAuthToken(); // Récupère le token après l'inscription (il est sauvegardé par le repo)
+      _currentCitoyen = newCitoyen;
       _isLoading = false;
       notifyListeners();
       return true;
@@ -84,11 +98,13 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// Déconnecte l'utilisateur en supprimant le token et en réinitialisant le profil.
+  @override
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
     await _authRepository.logout();
-    _currentCitoyen = null; // Efface le profil du citoyen
+    _token = null; // Efface le token interne à la déconnexion
+    _currentCitoyen = null;
     _isLoading = false;
     notifyListeners();
   }

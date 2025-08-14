@@ -7,10 +7,8 @@ import 'package:citoyen_app/presentation/screens/demandes/demandes_list_screen.d
 import 'package:citoyen_app/presentation/screens/my_documents/my_documents_screen.dart';
 import 'package:citoyen_app/presentation/screens/profile/profile_screen.dart';
 import 'package:citoyen_app/presentation/screens/demandes/form_acte_naissance_screen.dart';
-import 'package:citoyen_app/utils/app_router.dart'; // Import de AppRouter
-import 'package:citoyen_app/data/models/statut_model.dart'; // NOUVEL IMPORT POUR STATUT
-
-// Importe les autres écrans de formulaire
+import 'package:citoyen_app/utils/app_router.dart';
+import 'package:citoyen_app/data/models/statut_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,16 +21,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    _DashboardHome(), // Contenu principal du tableau de bord
-    DemandesListScreen(), // Écran des demandes
-    MyDocumentsScreen(), // Écran "Mes Documents"
-    ProfileScreen(), // Écran de profil
+    _DashboardHome(),
+    DemandesListScreen(),
+    MyDocumentsScreen(),
+    ProfileScreen(),
   ];
 
   @override
   void initState() {
     super.initState();
-    // Charge les demandes et statuts au démarrage du dashboard
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DemandeProvider>(context, listen: false).fetchMyDemandes();
       Provider.of<DemandeProvider>(context, listen: false).fetchStatuts();
@@ -67,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await authProvider.logout();
-              AppRouter.navigateToLogin(context); // Utilisation de AppRouter
+              AppRouter.navigateToLogin(context);
             },
             tooltip: 'Déconnexion',
           ),
@@ -102,11 +99,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// Widget pour le contenu principal du tableau de bord
 class _DashboardHome extends StatelessWidget {
   const _DashboardHome();
 
-  // Fonction utilitaire pour obtenir le nom du statut
   String getStatutName(List<Statut> statuts, int statutId) {
     return statuts.firstWhere((s) => s.id == statutId, orElse: () => Statut(id: statutId, nom: 'Inconnu')).nom;
   }
@@ -117,7 +112,6 @@ class _DashboardHome extends StatelessWidget {
     final demandeProvider = Provider.of<DemandeProvider>(context);
     final citoyen = authProvider.currentCitoyen;
 
-    // Calculer le nombre de demandes par statut
     final Map<int, int> statusCounts = {};
     for (var demande in demandeProvider.demandes) {
       statusCounts[demande.statutId] = (statusCounts[demande.statutId] ?? 0) + 1;
@@ -155,7 +149,8 @@ class _DashboardHome extends StatelessWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 16.0,
                         mainAxisSpacing: 16.0,
-                        childAspectRatio: 1.5,
+                        // Correction : Augmentez la hauteur des cartes en diminuant le childAspectRatio
+                        childAspectRatio: 1.2,
                       ),
                       itemCount: demandeProvider.statuts.length,
                       itemBuilder: (context, index) {
@@ -164,10 +159,9 @@ class _DashboardHome extends StatelessWidget {
                         return Card(
                           elevation: 4,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                          child: InkWell(
-                            onTap: () {
-                              AppRouter.navigateToDemandesList(context, filterStatusId: statut.id); // Utilisation de AppRouter
-                            },
+                          // MODIFICATION : onTap est maintenant null pour rendre le bloc non cliquable
+                          child: InkWell( 
+                            onTap: null, // Rendre ce InkWell non cliquable
                             borderRadius: BorderRadius.circular(12.0),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -175,11 +169,14 @@ class _DashboardHome extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    statut.nom.toUpperCase(),
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: AppColors.primaryBlue,
-                                      fontWeight: FontWeight.bold,
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      statut.nom.toUpperCase(),
+                                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        color: AppColors.primaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 8.0),
@@ -190,10 +187,13 @@ class _DashboardHome extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Text(
-                                    'demande(s)',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.brownText,
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'demande(s)',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: AppColors.brownText,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -223,25 +223,25 @@ class _DashboardHome extends StatelessWidget {
                 context,
                 'Acte de Naissance',
                 Icons.baby_changing_station,
-                () => AppRouter.navigateToFormActeNaissance(context), // CORRECTION ICI
+                () => AppRouter.navigateToFormActeNaissance(context),
               ),
               _buildDocumentRequestCard(
                 context,
                 'Carte d\'Identité',
                 Icons.badge,
-                () => AppRouter.navigateToFormCarteIdentite(context), // CORRECTION ICI
+                () => AppRouter.navigateToFormCarteIdentite(context),
               ),
               _buildDocumentRequestCard(
                 context,
                 'Acte de Mariage',
                 Icons.favorite,
-                () => AppRouter.navigateToFormActeMariage(context), // CORRECTION ICI
+                () => AppRouter.navigateToFormActeMariage(context),
               ),
               _buildDocumentRequestCard(
                 context,
                 'Acte de Résidence',
                 Icons.home,
-                () => AppRouter.navigateToFormActeResidence(context), // CORRECTION ICI
+                () => AppRouter.navigateToFormActeResidence(context),
               ),
             ],
           ),
@@ -251,24 +251,27 @@ class _DashboardHome extends StatelessWidget {
   }
 
   Widget _buildDocumentRequestCard(
-      BuildContext context, String title, IconData icon, VoidCallback onTapAction) { // Changement du type de paramètre
+      BuildContext context, String title, IconData icon, VoidCallback onTapAction) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: InkWell(
-        onTap: onTapAction, // Utilise l'action passée
+        onTap: onTapAction,
         borderRadius: BorderRadius.circular(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 48, color: AppColors.primaryBlue),
             const SizedBox(height: 8.0),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.darkText,
-                fontWeight: FontWeight.bold,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: AppColors.darkText,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
