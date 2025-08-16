@@ -1,8 +1,8 @@
 require('dotenv').config();
 
-
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Importation du module path
 
 const db = require('./models'); // Import Sequelize et modèles
 
@@ -24,6 +24,13 @@ const app = express();
 // Middlewares globaux
 app.use(cors());
 app.use(express.json());
+
+// **SERVIR LES FICHIERS STATIQUES DU DOSSIER 'documents'**
+// Cette ligne rend le contenu du dossier 'documents' accessible via l'URL /documents
+// Par exemple, si vous avez un fichier 'acte_naissance_123.pdf' dans './documents',
+// il sera accessible via http://votre_serveur:4000/documents/acte_naissance_123.pdf
+app.use('/documents', express.static(path.join(__dirname, 'documents')));
+
 
 // Route de test racine
 app.get('/', (req, res) => {

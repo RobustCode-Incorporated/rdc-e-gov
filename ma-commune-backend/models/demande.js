@@ -1,7 +1,7 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize) => {
   class Demande extends Model {
     /**
      * Définition des associations entre modèles
@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         as: 'commune',
       });
 
-      // Ajoute dans la méthode associate :
+      // Une demande peut être assignée à un agent
       Demande.belongsTo(models.Agent, {
         foreignKey: 'agentId',
         as: 'agent',
@@ -53,10 +53,19 @@ module.exports = (sequelize, DataTypes) => {
       },
       donneesJson: {
         type: DataTypes.TEXT,
-        allowNull: true, // champs dynamiques
+        allowNull: true,
       },
       commentaires: {
         type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      // NOUVEAUX CHAMPS AJOUTÉS POUR LE PROCESSUS DE VALIDATION
+      documentPath: {
+        type: DataTypes.STRING,
+        allowNull: true, // Le chemin est nul jusqu'à la génération du doc
+      },
+      verificationToken: {
+        type: DataTypes.UUID, // Un token unique pour la validation
         allowNull: true,
       },
     },
@@ -64,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Demande',
       tableName: 'Demandes',
-      timestamps: true, // garde createdAt et updatedAt
+      timestamps: true,
     }
   );
 
