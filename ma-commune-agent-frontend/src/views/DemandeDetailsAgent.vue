@@ -110,6 +110,8 @@ export default {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.statuts = res.data;
+        // NOUVEAU LOG POUR DÉBOGAGE
+        console.log('DEBUG (frontend): Statuts récupérés:', this.statuts);
       } catch (err) {
         console.error("Erreur chargement statuts:", err);
       }
@@ -144,7 +146,7 @@ export default {
         if (this.selectedStatutId) payload.statutId = this.selectedStatutId;
         if (this.comment !== undefined) payload.commentaires = this.comment;
 
-        // Mise à jour des commentaires et du statut de la demande
+        // Première requête : Mise à jour des commentaires et du statut de la demande
         await axios.put(`http://localhost:4000/api/demandes/${this.demande.id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -155,10 +157,20 @@ export default {
         
         alert("Mise à jour enregistrée.");
         
-        // Vérifier si le nouveau statut est "en_traitement" et générer le document si nécessaire
-        const statutToTraitement = this.statuts.find(s => s.nom === 'en_traitement');
-        if (statutToTraitement && this.selectedStatutId === statutToTraitement.id) {
+        // Trouver le statut "en traitement" (corrigé pour correspondre à la DB)
+        const statutToTraitement = this.statuts.find(s => s.nom === 'en traitement');
+
+        // *** LOGS DE DÉBOGAGE (À SUPPRIMER APRÈS VÉRIFICATION) ***
+        console.log('DEBUG (frontend): statutToTraitement trouvé:', statutToTraitement);
+        console.log('DEBUG (frontend): selectedStatutId (type):', typeof this.selectedStatutId, this.selectedStatutId);
+        console.log('DEBUG (frontend): statutToTraitement.id (type):', typeof statutToTraitement?.id, statutToTraitement?.id);
+        console.log('DEBUG (frontend): Condition de génération (selectedStatutId === statutToTraitement.id):', parseInt(this.selectedStatutId, 10) === statutToTraitement?.id);
+        // *******************************************************
+
+        // Vérifier si le nouveau statut est "en traitement" et générer le document si nécessaire
+        if (statutToTraitement && parseInt(this.selectedStatutId, 10) === statutToTraitement.id) {
           try {
+            console.log('DEBUG (frontend): Déclenchement de la génération de document...');
             const genRes = await axios.put(
               `http://localhost:4000/api/demandes/${this.demande.id}/generate-document`,
               {},
@@ -167,17 +179,17 @@ export default {
               }
             );
             
-            // Mise à jour de l'objet `demande` avec le chemin du document
-            this.demande.documentPath = genRes.data.documentUrl.split('/').pop();
+            // Re-fetch la demande complète après la génération pour s'assurer que documentPath est à jour
+            await this.fetchDemande();
             
             alert(genRes.data.message);
           } catch (genError) {
-            console.error("Erreur de génération du document:", genError.response.data);
+            console.error("Erreur de génération du document:", genError.response?.data || genError.message);
             alert("Mise à jour réussie, mais échec de la génération du document.");
           }
         }
       } catch (err) {
-        console.error("Erreur mise à jour demande:", err.response.data);
+        console.error("Erreur mise à jour demande:", err.response?.data || err.message);
         alert("Erreur lors de la mise à jour.");
       } finally {
         this.updating = false;

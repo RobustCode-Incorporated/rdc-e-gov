@@ -31,6 +31,7 @@
             <th>Citoyen</th>
             <th>Date</th>
             <th>Statut</th>
+            <th>Document</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -41,7 +42,29 @@
             <td>{{ formatDate(demande.createdAt) }}</td>
             <td>{{ getStatutLabel(demande.statut) }}</td>
             <td>
-              <button @click="goToDemandeDetails(demande.id)">Voir la demande</button>
+              <a v-if="demande.documentPath"
+                 :href="`http://localhost:4000/documents/${demande.documentPath}`"
+                 target="_blank"
+                 class="document-link-cell">
+                📥 Voir
+              </a>
+              <span v-else>N/A</span>
+            </td>
+            <td>
+              <button
+                v-if="demande.statut && demande.statut.nom === 'en_traitement'"
+                @click="validateDemande(demande.id)"
+                class="validate-btn"
+              >
+                Valider et Signer
+              </button>
+              <button
+                v-else
+                @click="goToDemandeDetails(demande.id)"
+                class="view-btn"
+              >
+                Voir la demande
+              </button>
             </td>
           </tr>
         </tbody>
@@ -86,6 +109,21 @@ export default {
         this.loading = false;
       }
     },
+    async validateDemande(id) {
+      if (confirm("Êtes-vous sûr de vouloir valider et signer ce document ?")) {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.put(`http://localhost:4000/api/demandes/${id}/validate-document`, {}, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          alert("Demande validée et document signé avec succès !");
+          this.fetchDemandes(); // Rafraîchir la liste
+        } catch (error) {
+          console.error("Erreur de validation:", error.response?.data);
+          alert("Erreur lors de la validation. Le document doit être 'en traitement'.");
+        }
+      }
+    },
     formatNomComplet(person) {
       if (!person) return "-";
       return [person.nom, person.prenom, person.postnom].filter(Boolean).join(" ");
@@ -100,7 +138,6 @@ export default {
       return mapping[type] || type;
     },
     getStatutLabel(statut) {
-      // Vérifie si le statut est un objet (avec un nom) ou une simple chaîne de caractères
       const statutNom = statut && statut.nom ? statut.nom : statut;
       return this.statutMapping[statutNom] || statutNom;
     },
@@ -108,18 +145,17 @@ export default {
       return new Date(date).toLocaleDateString("fr-FR");
     },
     goToDemandeDetails(id) {
-      // Redirige l'utilisateur vers la page de détails de la demande en passant l'ID
       this.$router.push({ name: 'DemandeDetailsAdmin', params: { id } });
     },
   },
   mounted() {
-    // Appel de la fonction de chargement des données au moment où le composant est monté
     this.fetchDemandes();
   },
 };
 </script>
 
 <style scoped>
+/* Styles existants pour .page-demandes */
 /* Navbar */
 .navbar {
   display: flex;
@@ -192,4 +228,27 @@ button {
 button:hover {
   background: #0e2c5a;
 }
+.validate-btn {
+  background: #28a745;
+}
+.validate-btn:hover {
+  background: #218838;
+}
+.view-btn {
+  background: #104b71;
+}
+.view-btn:hover {
+  background: #0e2c5a;
+}
+.document-link-cell {
+  background: #007bff;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.document-link-cell:hover {
+  background: #0056b3;
+}
+
 </style>

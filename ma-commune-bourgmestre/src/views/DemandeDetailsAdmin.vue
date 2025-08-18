@@ -41,18 +41,19 @@
 
       <div class="details-actions">
         <button 
-          v-if="demande.statut && demande.statut.nom === 'en_traitement'" 
+          v-if="demande.statut && demande.statut.nom === 'en traitement'" 
           @click="validateDemande"
-          :disabled="isUpdating">
+          :disabled="isUpdating"
+          class="validate-button"> <!-- Ajout d'une classe pour le style -->
           <span v-if="isUpdating">Validation en cours...</span>
-          <span v-else>Valider la demande</span>
+          <span v-else>Valider et signer le document</span>
         </button>
 
         <a 
           v-if="demande.documentPath"
           :href="`http://localhost:4000/documents/${demande.documentPath.split('/').pop()}`"
           target="_blank"
-          class="nav-btn">
+          class="view-document-link"> <!-- Ajout d'une classe pour le style -->
           📥 Voir le Document
         </a>
         
@@ -74,7 +75,7 @@ export default {
       demande: null,
       statutMapping: {
         soumise: "Soumise",
-        en_traitement: "En traitement",
+        "en traitement": "En traitement", // Corrigé pour correspondre à la DB
         validee: "Validée",
       },
     };
@@ -96,7 +97,6 @@ export default {
         this.loading = false;
       }
     },
-    // Nouvelle méthode pour la validation finale par le bourgmestre
     async validateDemande() {
       this.isUpdating = true;
       try {
@@ -110,13 +110,11 @@ export default {
           }
         );
         alert(res.data.message);
-        
-        // Mettre à jour le statut en 'validee' après succès
-        this.demande.statut.nom = 'validee';
-        
+        // Rafraîchir complètement les données de la demande pour obtenir le nouveau documentPath et le statut
+        await this.fetchDemandeDetails(); 
       } catch (error) {
-        console.error("Erreur de validation:", error);
-        alert("Erreur lors de la validation de la demande.");
+        console.error("Erreur de validation:", error.response?.data || error.message);
+        alert("Erreur lors de la validation et de la signature du document.");
       } finally {
         this.isUpdating = false;
       }
@@ -140,7 +138,9 @@ export default {
     },
     getStatutClass(statut) {
       const statutNom = statut && statut.nom ? statut.nom : statut;
-      return `statut-${statutNom}`;
+      // Normaliser le nom pour les classes CSS si nécessaire (remplacer les espaces par des underscores)
+      const cssClassNom = statutNom ? statutNom.replace(/\s+/g, '_') : '';
+      return `statut-${cssClassNom}`;
     },
     formatDate(date) {
       return new Date(date).toLocaleDateString("fr-FR");
@@ -211,12 +211,12 @@ export default {
   font-weight: bold;
   padding: 6px 12px;
   border-radius: 15px;
-  
+  color: white; /* Assurer que le texte est lisible sur les fonds colorés */
 }
 .statut-soumise {
   background-color: #f0ad4e;
 }
-.statut-en_traitement {
+.statut-en_traitement { /* Utilisera ceci si le nom est "en traitement" */
   background-color: #003da5;
 }
 .statut-validee {
@@ -243,18 +243,23 @@ export default {
   gap: 10px;
 }
 .details-actions button,
-.details-actions .nav-btn {
+.details-actions .nav-btn,
+.details-actions .view-document-link { /* Inclure la nouvelle classe de lien */
   padding: 10px 20px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
   font-weight: bold;
+  text-decoration: none; /* Pour le lien */
+  display: inline-flex; /* Pour le lien, pour centrer le contenu si nécessaire */
+  align-items: center;
+  justify-content: center;
 }
-.details-actions button:first-of-type {
+.validate-button { /* Nouveau style pour le bouton de validation */
   background: #28a745;
   color: white;
 }
-.details-actions button:first-of-type:hover {
+.validate-button:hover {
   background: #218838;
 }
 .back-btn {
@@ -263,5 +268,12 @@ export default {
 }
 .back-btn:hover {
   background: #5a6268;
+}
+.view-document-link { /* Nouveau style pour le lien de document */
+  background-color: #007bff;
+  color: white;
+}
+.view-document-link:hover {
+  background-color: #0056b3;
 }
 </style>

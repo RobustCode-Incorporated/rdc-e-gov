@@ -1,5 +1,5 @@
 // controllers/demandeController.js
-const { Demande, Citoyen, Statut, Agent, Commune, Province } = require('../models');
+const { Demande, Citoyen, Statut, Agent, Commune, Province, Administrateur } = require('../models'); // Added Administrateur model
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -17,6 +17,7 @@ const getStatutIdByName = async (name) => {
 module.exports = {
   async getAllDemandes(req, res) {
     try {
+      // Inclut toutes les associations nécessaires pour afficher les détails complets
       const demandes = await Demande.findAll({
         include: [{ model: Citoyen, as: 'citoyen' }, { model: Statut, as: 'statut' }, { model: Agent, as: 'agent' }],
         order: [['createdAt', 'DESC']]
@@ -175,6 +176,19 @@ module.exports = {
       console.log('DEBUG: Commune Naissance Enfant:', communeNaissanceEnfant?.nom);
       console.log('DEBUG: Province Naissance Enfant:', provinceNaissanceEnfant?.nom);
 
+      // Define the base signature block without the Bourgmestre's name/font for initial generation
+      const baseSignatureBlock = `
+        <div class="signature-section" style="text-align: right; margin-top: 50px;">
+          <p>Le Bourgmestre</p>
+          <p>_________________________</p>
+          <p>Signature (Numérique)</p>
+        </div>
+        <div class="qr-code" style="text-align: center; margin-top: 30px;">
+          <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
+        </div>
+        <p class="verification-link" style="text-align: center; font-size: 0.9em; margin-top: 10px; color: #555;">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+      `;
+
       switch (typeDemande) {
         case 'acte_naissance':
           htmlContent = `
@@ -183,9 +197,6 @@ module.exports = {
               h1 { color: #003da5; text-align: center; }
               .header, .footer { text-align: center; font-size: 0.8em; }
               .content { margin-top: 30px; line-height: 1.6; }
-              .signature-section { text-align: right; margin-top: 50px; }
-              .qr-code { text-align: center; margin-top: 30px; }
-              .verification-link { text-align: center; font-size: 0.9em; margin-top: 10px; color: #555; }
             </style>
             <body>
               <div class="header">
@@ -208,15 +219,7 @@ module.exports = {
                 <p><strong>Mère :</strong> ${donneesDemande.prenomMere || 'N/A'} ${donneesDemande.nomMere || 'N/A'}</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
-              <div class="signature-section">
-                <p>Le Bourgmestre</p>
-                <p>_________________________</p>
-                <p>Signature (Numérique)</p>
-              </div>
-              <div class="qr-code">
-                <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
-              </div>
-              <p class="verification-link">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+              ${baseSignatureBlock}
             </body>
           `;
           break;
@@ -227,9 +230,6 @@ module.exports = {
               h1 { color: #003da5; text-align: center; }
               .header, .footer { text-align: center; font-size: 0.8em; }
               .content { margin-top: 30px; line-height: 1.6; }
-              .signature-section { text-align: right; margin-top: 50px; }
-              .qr-code { text-align: center; margin-top: 30px; }
-              .verification-link { text-align: center; font-size: 0.9em; margin-top: 10px; color: #555; }
             </style>
             <body>
               <div class="header">
@@ -246,15 +246,7 @@ module.exports = {
                 <p>a été célébré le ${donneesDemande.dateMariage ? new Date(donneesDemande.dateMariage).toLocaleDateString("fr-FR") : 'N/A'} dans notre commune.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
-              <div class="signature-section">
-                <p>Le Bourgmestre</p>
-                <p>_________________________</p>
-                <p>Signature (Numérique)</p>
-              </div>
-              <div class="qr-code">
-                <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
-              </div>
-              <p class="verification-link">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+              ${baseSignatureBlock}
             </body>
           `;
           break;
@@ -265,9 +257,6 @@ module.exports = {
               h1 { color: #003da5; text-align: center; }
               .header, .footer { text-align: center; font-size: 0.8em; }
               .content { margin-top: 30px; line-height: 1.6; }
-              .signature-section { text-align: right; margin-top: 50px; }
-              .qr-code { text-align: center; margin-top: 30px; }
-              .verification-link { text-align: center; font-size: 0.9em; margin-top: 10px; color: #555; }
             </style>
             <body>
               <div class="header">
@@ -286,15 +275,7 @@ module.exports = {
                 <p><strong>Réside à :</strong> ${donneesDemande.adresseResidence || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
-              <div class="signature-section">
-                <p>Le Bourgmestre</p>
-                <p>_________________________</p>
-                <p>Signature (Numérique)</p>
-              </div>
-              <div class="qr-code">
-                <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
-              </div>
-              <p class="verification-link">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+              ${baseSignatureBlock}
             </body>
           `;
           break;
@@ -305,9 +286,6 @@ module.exports = {
               h1 { color: #003da5; text-align: center; }
               .header, .footer { text-align: center; font-size: 0.8em; }
               .content { margin-top: 30px; line-height: 1.6; }
-              .signature-section { text-align: right; margin-top: 50px; }
-              .qr-code { text-align: center; margin-top: 30px; }
-              .verification-link { text-align: center; font-size: 0.9em; margin-top: 10px; color: #555; }
               .card-layout { display: flex; border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: 20px auto; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
               .card-left { flex: 1; text-align: center; padding-right: 20px; }
               .card-right { flex: 2; }
@@ -357,10 +335,7 @@ module.exports = {
               <p>ID Demande: ${demande.id}</p>
               <p>Type: ${demande.typeDemande}</p>
               <p>Délivré à Kinshasa, le ${currentDate}.</p>
-              <div class="qr-code">
-                <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
-              </div>
-              <p class="verification-link">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+              ${baseSignatureBlock}
             </body>
           `;
       }
@@ -405,36 +380,327 @@ module.exports = {
       if (error.stack) {
         console.error("Stack Trace:", error.stack);
       }
+      // En cas d'échec de la génération, mettez explicitement documentPath à null
+      await demande.update({
+        documentPath: null,
+        verificationToken: null // Ou conservez le token si vous voulez retracer la tentative
+      }).catch(dbErr => {
+        console.error("Erreur lors de la mise à jour de la demande après échec de génération:", dbErr);
+      });
       res.status(500).json({ message: "Erreur serveur lors de la génération du document.", error: error.message });
       console.log('--- Fin de la fonction generateDocument (Échec) ---');
     }
   },
 
   async validateDocument(req, res) {
+    console.log('--- Appel de la fonction validateDocument (Signature) ---');
     try {
       const { id } = req.params;
-      const demande = await Demande.findByPk(id, { include: [{ model: Statut, as: 'statut' }] });
-
+      // Fetch all necessary associations to reconstruct the HTML
+      const demande = await Demande.findByPk(id, {
+        include: [
+          {
+            model: Citoyen,
+            as: 'citoyen',
+            include: [{ model: Commune, as: 'commune' }]
+          },
+          { model: Agent, as: 'agent' }, // Make sure the agent data is loaded
+          { model: Statut, as: 'statut' }
+        ]
+      });
+  
       if (!demande) {
+        console.error(`Erreur: Demande non trouvée pour l'ID: ${id}`);
         return res.status(404).json({ message: "Demande non trouvée." });
       }
+  
+      if (demande.statut.nom !== 'en traitement') { 
+        console.error(`Erreur: Statut de la demande (${demande.statut.nom}) n'est pas 'en traitement'.`);
+        return res.status(400).json({ message: "La demande ne peut être validée que si elle est 'en traitement'." });
+      }
+  
+      if (!demande.documentPath || !demande.verificationToken) {
+        console.error("Erreur: Aucun document généré ou jeton de vérification pour cette demande.");
+        return res.status(400).json({ message: "Aucun document généré pour cette demande." });
+      }
+      
+      const citoyen = demande.citoyen;
+      const donneesDemande = JSON.parse(demande.donneesJson || '{}');
+      const typeDemande = demande.typeDemande;
+      const currentDate = new Date().toLocaleDateString("fr-FR");
+      
+      // *** MODIFICATION ICI : Récupérer le nom du bourgmestre depuis req.user ***
+      let bourgmestreName = 'Nom du Bourgmestre (Fallback)'; // Default fallback for clarity in logs
+      console.log('DEBUG_AUTH: Contenu de req.user:', req.user); 
 
-      if (demande.statut.nom !== 'en_traitement') {
-        return res.status(400).json({ message: "La demande ne peut pas être validée si elle n'est pas 'en_traitement'." });
+      if (req.user && req.user.role === 'admin') { // Changed 'bourgmestre' to 'admin'
+        const bourgmestre = await Administrateur.findByPk(req.user.id);
+        console.log('DEBUG_AUTH: Administrateur trouvé par req.user.id:', bourgmestre ? bourgmestre.toJSON() : 'Non trouvé');
+        if (bourgmestre) {
+          const prenom = bourgmestre.prenom || '';
+          const nom = bourgmestre.nom || '';
+          bourgmestreName = `${prenom} ${nom}`.trim();
+          if (!bourgmestreName) { 
+              bourgmestreName = 'Le Bourgmestre (Prénom/Nom vide dans Administrateur)';
+          }
+        } else {
+            console.log('DEBUG_AUTH: Aucun administrateur trouvé pour req.user.id:', req.user.id);
+            bourgmestreName = 'Le Bourgmestre (ID Admin non trouvé)';
+        }
+      } else {
+        console.log('DEBUG_AUTH: Utilisateur non connecté comme bourgmestre ou rôle incorrect. Rôle:', req.user?.role || 'N/A');
+        // Si l'utilisateur n'est pas bourgmestre, on ne signe pas avec son nom
+        bourgmestreName = 'Nom du Bourgmestre (Non Authentifié)'; 
+      }
+      console.log('DEBUG_AUTH: Nom final du Bourgmestre pour signature:', bourgmestreName);
+      // *************************************************************************
+
+      // Re-use the original verification token for the signed document
+      const verificationToken = demande.verificationToken; 
+      const verificationUrl = `http://localhost:4000/verify-document?token=${verificationToken}`;
+      const qrCodeDataURL = await qrcode.toDataURL(verificationUrl);
+      console.log('Jeton de vérification et QR Code réutilisés.');
+
+      let communeNaissanceEnfant = null;
+      let provinceNaissanceEnfant = null;
+      if (donneesDemande.communeNaissanceEnfantId) {
+        communeNaissanceEnfant = await Commune.findByPk(donneesDemande.communeNaissanceEnfantId);
+      }
+      if (donneesDemande.provinceNaissanceEnfantId) {
+        provinceNaissanceEnfant = await Province.findByPk(donneesDemande.provinceNaissanceEnfantId);
       }
 
-      const valideeStatutId = await getStatutIdByName('validee');
+      let htmlContent = ''; 
+      // Define the signature block with dynamic name and desired styling
+      const signatureBlockSigned = `
+        <div class="signature-section" style="text-align: right; margin-top: 50px;">
+          <p>Le Bourgmestre</p>
+          <p class="bourgmestre-name" style="font-family: 'Brush Script MT', 'Lucida Handwriting', cursive; font-size: 1.4em; margin-top: 5px; font-weight: bold; color: #000;">
+            ${bourgmestreName}
+          </p>
+        </div>
+        <div class="qr-code" style="text-align: center; margin-top: 30px;">
+          <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="100" height="100">
+        </div>
+        <p class="verification-link" style="text-align: center; font-size: 0.9em; margin-top: 10px; color: #555;">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+      `;
+
+      // Reconstruct the full HTML content, now including the signature
+      switch (typeDemande) {
+        case 'acte_naissance':
+          htmlContent = `
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #003da5; text-align: center; }
+              .header, .footer { text-align: center; font-size: 0.8em; }
+              .content { margin-top: 30px; line-height: 1.6; }
+              .bourgmestre-name {
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+                font-size: 1.4em;
+                margin-top: 5px;
+                font-weight: bold;
+                color: #000;
+              }
+            </style>
+            <body>
+              <div class="header">
+                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                <p>PROVINCE DE KINSHASA</p>
+                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                <hr>
+              </div>
+              <h1>ACTE DE NAISSANCE</h1>
+              <div class="content">
+                <p>Je soussigné, le Bourgmestre de la commune de ${citoyen.commune?.nom || 'XXX'},</p>
+                <p>atteste que l'enfant :</p>
+                <p><strong>Nom :</strong> ${donneesDemande.nomEnfant || 'N/A'}</p>
+                <p><strong>Postnom :</strong> ${donneesDemande.postnomEnfant || 'N/A'}</p>
+                <p><strong>Prénom :</strong> ${donneesDemande.prenomEnfant || 'N/A'}</p>
+                <p><strong>Sexe :</strong> ${donneesDemande.sexeEnfant || 'N/A'}</p>
+                <p><strong>Né(e) le :</strong> ${donneesDemande.dateNaissanceEnfant ? new Date(donneesDemande.dateNaissanceEnfant).toLocaleDateString("fr-FR") : 'N/A'}</p>
+                <p><strong>Lieu de naissance :</strong> ${donneesDemande.lieuNaissanceEnfant || 'N/A'}, ${communeNaissanceEnfant?.nom || ''}, ${provinceNaissanceEnfant?.nom || ''}</p>
+                <p><strong>Père :</strong> ${donneesDemande.prenomPere || 'N/A'} ${donneesDemande.nomPere || 'N/A'}</p>
+                <p><strong>Mère :</strong> ${donneesDemande.prenomMere || 'N/A'} ${donneesDemande.nomMere || 'N/A'}</p>
+                <p>Délivré à Kinshasa, le ${currentDate}.</p>
+              </div>
+              ${signatureBlockSigned}
+            </body>
+          `;
+          break;
+        case 'acte_mariage':
+          htmlContent = `
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #003da5; text-align: center; }
+              .header, .footer { text-align: center; font-size: 0.8em; }
+              .content { margin-top: 30px; line-height: 1.6; }
+              .bourgmestre-name {
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+                font-size: 1.4em;
+                margin-top: 5px;
+                font-weight: bold;
+                color: #000;
+              }
+            </style>
+            <body>
+              <div class="header">
+                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                <p>PROVINCE DE KINSHASA</p>
+                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                <hr>
+              </div>
+              <h1>ACTE DE MARIAGE</h1>
+              <div class="content">
+                <p>Le mariage entre :</p>
+                <p><strong>Époux :</strong> ${donneesDemande.epouxNom || 'N/A'} ${donneesDemande.epouxPrenom || 'N/A'}</p>
+                <p><strong>Épouse :</strong> ${donneesDemande.epouseNom || 'N/A'} ${donneesDemande.epousePrenom || 'N/A'}</p>
+                <p>a été célébré le ${donneesDemande.dateMariage ? new Date(donneesDemande.dateMariage).toLocaleDateString("fr-FR") : 'N/A'} dans notre commune.</p>
+                <p>Délivré à Kinshasa, le ${currentDate}.</p>
+              </div>
+              ${signatureBlockSigned}
+            </body>
+          `;
+          break;
+        case 'acte_residence':
+          htmlContent = `
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #003da5; text-align: center; }
+              .header, .footer { text-align: center; font-size: 0.8em; }
+              .content { margin-top: 30px; line-height: 1.6; }
+              .bourgmestre-name {
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+                font-size: 1.4em;
+                margin-top: 5px;
+                font-weight: bold;
+                color: #000;
+              }
+            </style>
+            <body>
+              <div class="header">
+                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                <p>PROVINCE DE KINSHASA</p>
+                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                <hr>
+              </div>
+              <h1>CERTIFICAT DE RÉSIDENCE</h1>
+              <div class="content">
+                <p>Je soussigné, le Bourgmestre de la commune de ${citoyen.commune?.nom || 'XXX'},</p>
+                <p>atteste que le citoyen :</p>
+                <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
+                <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
+                <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
+                <p><strong>Réside à :</strong> ${donneesDemande.adresseResidence || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
+                <p>Délivré à Kinshasa, le ${currentDate}.</p>
+              </div>
+              ${signatureBlockSigned}
+            </body>
+          `;
+          break;
+        case 'carte_identite':
+          htmlContent = `
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #003da5; text-align: center; }
+              .header, .footer { text-align: center; font-size: 0.8em; }
+              .content { margin-top: 30px; line-height: 1.6; }
+              .card-layout { display: flex; border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: 20px auto; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+              .card-left { flex: 1; text-align: center; padding-right: 20px; }
+              .card-right { flex: 2; }
+              .profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #003da5; }
+              .card-info p { margin: 5px 0; }
+              .bourgmestre-name {
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+                font-size: 1.4em;
+                margin-top: 5px;
+                font-weight: bold;
+                color: #000;
+              }
+            </style>
+            <body>
+              <div class="header">
+                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                <p>PROVINCE DE KINSHASA</p>
+                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                <hr>
+              </div>
+              <h1>CARTE D'IDENTITÉ NATIONALE</h1>
+              <div class="card-layout">
+                <div class="card-left">
+                  <img src="https://placehold.co/100x100/003DA5/FFFFFF?text=PHOTO" alt="Photo de profil" class="profile-pic">
+                  <div class="qr-code">
+                    <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="80" height="80">
+                  </div>
+                </div>
+                <div class="card-right card-info">
+                  <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
+                  <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
+                  <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
+                  <p><strong>Né(e) le :</strong> ${citoyen.dateNaissance ? new Date(citoyen.dateNaissance).toLocaleDateString("fr-FR") : 'N/A'}</p>
+                  <p><strong>Sexe :</strong> ${citoyen.sexe || 'N/A'}</p>
+                  <p><strong>Lieu de Naissance :</strong> ${citoyen.lieuNaissance || 'N/A'}</p>
+                  <p><strong>N° Unique :</strong> ${citoyen.numeroUnique || 'N/A'}</p>
+                  <p><strong>Délivrée le :</strong> ${currentDate}</p>
+                </div>
+              </div>
+              <p class="verification-link" style="text-align: center; margin-top: 20px;">Vérifiez l'authenticité : <a href="${verificationUrl}">${verificationUrl}</a></p>
+              ${signatureBlockSigned}
+            </body>
+          `;
+          break;
+        default:
+          htmlContent = `
+            <body>
+              <h1>Document Non Standard</h1>
+              <p>Type de document non reconnu ou template non disponible.</p>
+              <p>ID Demande: ${demande.id}</p>
+              <p>Type: ${demande.typeDemande}</p>
+              <p>Délivré à Kinshasa, le ${currentDate}.</p>
+              ${signatureBlockSigned}
+            </body>
+          `;
+      }
+
+      console.log('Reconstruction et ajout de signature au contenu HTML.');
+      
+      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' }); // Attendre que le réseau soit inactif
+      console.log('Contenu de la page avec signature défini.');
+
+      const signedFilename = `${typeDemande}_${demande.id}_${verificationToken}_signed.pdf`;
+      const signedPdfPath = path.join(DOCUMENTS_DIR, signedFilename);
+
+      await fs.mkdir(DOCUMENTS_DIR, { recursive: true }); // Ensure directory exists
+      console.log(`Tentative de génération du PDF signé vers: ${signedPdfPath}`);
+      await page.pdf({ path: signedPdfPath, format: 'A4', printBackground: true });
+      console.log('PDF signé généré avec succès.');
+
+      await browser.close();
+      console.log('Navigateur Puppeteer fermé.');
+
+      const valideeStatutId = await getStatutIdByName('validée'); 
       if (!valideeStatutId) {
-        return res.status(500).json({ message: "Statut 'validee' non trouvé." });
+        throw new Error("Statut 'validée' non trouvé en base de données.");
       }
 
-      await demande.update({ statutId: valideeStatutId });
-
-      res.json({ message: "Demande validée avec succès !" });
+      await demande.update({
+        statutId: valideeStatutId,
+        documentPath: signedFilename // Sauvegarder le nom du fichier signé
+      });
+      console.log('Demande mise à jour en base de données avec le document signé et le statut "validée".');
+  
+      res.json({ message: "Document validé et signé avec succès !", documentUrl: `/documents/${signedFilename}` });
+      console.log('--- Fin de la fonction validateDocument (Succès) ---');
 
     } catch (error) {
-      console.error('Erreur validateDocument:', error);
-      res.status(500).json({ message: "Erreur lors de la validation de la demande.", error: error.message });
+      console.error("--- Erreur CRITIQUE lors de la validation et signature du document ---");
+      console.error("Détails de l'erreur:", error);
+      if (error.stack) {
+        console.error("Stack Trace:", error.stack);
+      }
+      res.status(500).json({ message: "Erreur serveur lors de la validation et signature.", error: error.message });
+      console.log('--- Fin de la fonction validateDocument (Échec) ---');
     }
   },
 
