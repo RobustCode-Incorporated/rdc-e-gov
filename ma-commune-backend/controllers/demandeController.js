@@ -703,6 +703,70 @@ module.exports = {
       console.log('--- Fin de la fonction validateDocument (Échec) ---');
     }
   },
+  // A ajouter dans le module.exports de votre demandeController.js
+  async downloadDocument(req, res) {
+    try {
+      const { id } = req.params;
+      const demande = await Demande.findByPk(id);
+  
+      if (!demande || !demande.documentPath) {
+        return res.status(404).json({ message: "Document non trouvé." });
+      }
+  
+      // Assurez-vous que le citoyen a le droit de télécharger son propre document
+      if (req.user.role !== 'admin' && req.user.id !== demande.citoyenId) {
+        return res.status(403).json({ message: "Accès interdit." });
+      }
+  
+      const filePath = path.join(DOCUMENTS_DIR, demande.documentPath);
+  
+      // Vérifie si le fichier existe
+      await fs.access(filePath);
+      
+      // Envoie le fichier au client
+      res.download(filePath, (err) => {
+        if (err) {
+          console.error('Erreur lors de l\'envoi du fichier:', err);
+          res.status(500).json({ message: "Erreur serveur lors du téléchargement." });
+        }
+      });
+  
+    } catch (error) {
+      console.error('Erreur downloadDocument:', error);
+      res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+  },
+  // ... après les autres fonctions existantes
+  
+  async getValidatedDocuments(req, res) {
+    try {
+      if (!req.user || req.user.role !== 'citoyen') {
+        return res.status(403).json({ message: 'Accès interdit: Seuls les citoyens peuvent consulter leurs documents validés.' });
+      }
+  
+      // On récupère l'ID du statut 'valide' ou 'validé'
+      const validatedStatut = await Statut.findOne({ where: { nom: 'validée' } });
+      if (!validatedStatut) {
+        return res.status(404).json({ message: 'Statut de validation non trouvé.' });
+      }
+  
+      // On cherche les demandes du citoyen connecté qui ont le statut 'valide'
+      const demandes = await Demande.findAll({
+        where: { 
+          citoyenId: req.user.id,
+          statutId: validatedStatut.id // On filtre par l'ID du statut 'valide'
+        },
+        include: [{ model: Statut, as: 'statut' }],
+        order: [['updatedAt', 'DESC']]
+      });
+  
+      res.json(demandes);
+  
+    } catch (error) {
+      console.error('Erreur getValidatedDocuments:', error);
+      res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+  },
 
   async getAllStatuts(req, res) {
     try {

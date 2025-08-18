@@ -4,30 +4,28 @@ const router = express.Router();
 const demandeController = require('../controllers/demandeController');
 const auth = require('../middleware/authMiddleware');
 
-// Route spécifique pour le citoyen connecté DOIT être définie en premier
+// Route pour le citoyen connecté DOIT être définie avant les routes génériques
 router.get('/me', auth(['citoyen']), demandeController.getMyDemandes);
 
-router.get('/validation', auth(['admin', 'admin_general']), demandeController.getDemandesToValidate);
+// Route pour récupérer les documents validés
+router.get('/validated', auth(['citoyen']), demandeController.getValidatedDocuments);
+
+// Route pour les demandes à valider par les agents et admins
+router.get('/validation', auth(['agent', 'admin', 'admin_general']), demandeController.getDemandesToValidate);
+
+// Nouvelle route pour le téléchargement du document
+router.get('/:id/download', auth(['citoyen', 'agent', 'admin', 'admin_general']), demandeController.downloadDocument);
 
 // Les routes avec des paramètres généraux comme ':id' DOIVENT être définies après
-router.get('/', auth(['agent', 'admin']), demandeController.getAllDemandes);
-router.get('/:id', auth(['agent', 'admin']), demandeController.getDemandeById);
+router.get('/', auth(['agent', 'admin', 'admin_general']), demandeController.getAllDemandes);
+router.get('/:id', auth(['agent', 'admin', 'admin_general']), demandeController.getDemandeById);
 
-// NOTE: Vous aviez deux routes GET /:id. J'ai conservé getDemandeById et retiré getOneDemande pour éviter la duplication.
-// router.get('/:id', auth(['admin', 'agent']), demandeController.getOneDemande); // REDONDANT, RETIRÉ
+router.post('/', auth(['citoyen' ]), demandeController.createDemande);
+router.put('/:id', auth(['agent', 'admin', 'admin_general']), demandeController.updateDemande);
+router.delete('/:id', auth(['admin', 'admin_general']), demandeController.deleteDemande);
 
-router.post('/', auth(['agent', 'citoyen' ]), demandeController.createDemande);
-router.put('/:id', auth(['agent', 'admin']), demandeController.updateDemande);
-router.delete('/:id', auth(['admin']), demandeController.deleteDemande);
-
-// NOUVELLE ROUTE POUR LA GÉNÉRATION DE DOCUMENT
-router.put('/:id/generate-document', auth(['agent', 'admin']), demandeController.generateDocument);
-
-// NOUVELLE ROUTE POUR LA VALIDATION FINALE DU DOCUMENT PAR L'ADMIN
-router.put('/:id/validate-document', auth(['admin']), demandeController.validateDocument);
-
-// NOUVELLE ROUTE POUR LE TÉLÉCHARGEMENT DU DOCUMENT (pour plus tard, si nécessaire)
-// router.get('/:id/download', auth(['citoyen', 'agent', 'admin']), demandeController.downloadDocument);
-
+// Routes de génération et de validation/signature des documents
+router.put('/:id/generate-document', auth(['agent', 'admin', 'admin_general']), demandeController.generateDocument);
+router.put('/:id/validate-document', auth(['admin', 'admin_general']), demandeController.validateDocument);
 
 module.exports = router;

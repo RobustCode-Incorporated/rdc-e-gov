@@ -75,16 +75,24 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                 elevation: 3,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                 child: InkWell(
+                  // lib/screens/my_documents_screen.dart
+// ... imports existants
+
+// ... le reste du code
                   onTap: () async {
-                    // Logique pour le téléchargement ou la prévisualisation du document
-                    // Cette partie doit être développée pour interagir avec ton backend
-                    // pour obtenir le fichier réel (ex: PDF)
-                    _showSnackBar('Tentative de téléchargement de ${document.typeDemande}. Fonctionnalité à compléter.', isError: false);
+                    _showSnackBar('Téléchargement en cours...');
                     
-                    // Exemple d'appel pour déclencher le téléchargement via le provider
-                    // Tu devras t'assurer que downloadDocument gère l'ouverture de l'URL ou le téléchargement local
-                    // await demandeProvider.downloadDocument(document.id);
+                    // Appel de la nouvelle méthode du provider
+                    await demandeProvider.downloadAndOpenDocument(document.id);
+
+                    // Affiche un message de succès ou d'erreur après l'opération
+                    if (demandeProvider.errorMessage != null) {
+                      _showSnackBar(demandeProvider.errorMessage!, isError: true);
+                    } else {
+                      _showSnackBar('Document téléchargé et ouvert avec succès.');
+                    }
                   },
+// ... le reste du code
                   borderRadius: BorderRadius.circular(12.0),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
