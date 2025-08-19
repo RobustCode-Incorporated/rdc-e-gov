@@ -51,6 +51,11 @@ module.exports = {
 
   async createDemande(req, res) {
     try {
+      // Transforme donneesJson en string si c'est un objet ou tableau
+      if (req.body.donneesJson && typeof req.body.donneesJson !== 'string') {
+        req.body.donneesJson = JSON.stringify(req.body.donneesJson);
+      }
+  
       const demande = await Demande.create(req.body);
       res.status(201).json(demande);
     } catch (error) {
@@ -272,7 +277,7 @@ module.exports = {
                 <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
                 <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
                 <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
-                <p><strong>Réside à :</strong> ${donneesDemande.adresseResidence || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
+                <p><strong>Réside à :</strong> ${donneesDemande.adresseComplete || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
               ${baseSignatureBlock}
@@ -552,8 +557,8 @@ module.exports = {
               <h1>ACTE DE MARIAGE</h1>
               <div class="content">
                 <p>Le mariage entre :</p>
-                <p><strong>Époux :</strong> ${donneesDemande.epouxNom || 'N/A'} ${donneesDemande.epouxPrenom || 'N/A'}</p>
-                <p><strong>Épouse :</strong> ${donneesDemande.epouseNom || 'N/A'} ${donneesDemande.epousePrenom || 'N/A'}</p>
+                <strong>Époux :</strong> ${citoyen.nom || 'N/A'} ${citoyen.prenom || 'N/A'}
+                <strong>Épouse :</strong> ${donneesDemande.nomConjoint || 'N/A'} ${donneesDemande.prenomConjoint || 'N/A'}
                 <p>a été célébré le ${donneesDemande.dateMariage ? new Date(donneesDemande.dateMariage).toLocaleDateString("fr-FR") : 'N/A'} dans notre commune.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
@@ -590,7 +595,7 @@ module.exports = {
                 <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
                 <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
                 <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
-                <p><strong>Réside à :</strong> ${donneesDemande.adresseResidence || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
+                <p><strong>Réside à :</strong> ${donneesDemande.adresseComplete || 'N/A'}, ${citoyen.commune?.nom || 'XXX'}, Kinshasa.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
               ${signatureBlockSigned}
