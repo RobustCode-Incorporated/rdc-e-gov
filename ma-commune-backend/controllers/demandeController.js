@@ -112,7 +112,7 @@ module.exports = {
       const demandes = await Demande.findAll({
         include: [
           { model: Citoyen, as: 'citoyen' },
-          { model: Statut, as: 'statut', where: { nom: 'en_traitement' } },
+          { model: Statut, as: 'statut', where: { nom: 'en traitement' } },
           { model: Agent, as: 'agent' }
         ],
         order: [['createdAt', 'DESC']]
@@ -246,8 +246,12 @@ module.exports = {
               <h1>ACTE DE MARIAGE</h1>
               <div class="content">
                 <p>Le mariage entre :</p>
-                <p><strong>Époux :</strong> ${donneesDemande.epouxNom || 'N/A'} ${donneesDemande.epouxPrenom || 'N/A'}</p>
-                <p><strong>Épouse :</strong> ${donneesDemande.epouseNom || 'N/A'} ${donneesDemande.epousePrenom || 'N/A'}</p>
+                <p>
+                  <strong>Époux :</strong> ${citoyen.nom || 'N/A'} ${citoyen.postnom ? (citoyen.postnom + ' ') : ''}${citoyen.prenom || 'N/A'}
+                </p>
+                <p>
+                  <strong>Épouse :</strong> ${donneesDemande.nomConjoint || 'N/A'} ${donneesDemande.postnomConjoint ? (donneesDemande.postnomConjoint + ' ') : ''}${donneesDemande.prenomConjoint || 'N/A'}
+                </p>
                 <p>a été célébré le ${donneesDemande.dateMariage ? new Date(donneesDemande.dateMariage).toLocaleDateString("fr-FR") : 'N/A'} dans notre commune.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>
@@ -557,8 +561,12 @@ module.exports = {
               <h1>ACTE DE MARIAGE</h1>
               <div class="content">
                 <p>Le mariage entre :</p>
-                <strong>Époux :</strong> ${citoyen.nom || 'N/A'} ${citoyen.prenom || 'N/A'}
-                <strong>Épouse :</strong> ${donneesDemande.nomConjoint || 'N/A'} ${donneesDemande.prenomConjoint || 'N/A'}
+                <p>
+                  <strong>Époux :</strong> ${citoyen.nom || 'N/A'} ${citoyen.postnom ? (citoyen.postnom + ' ') : ''}${citoyen.prenom || 'N/A'}
+                </p>
+                <p>
+                  <strong>Épouse :</strong> ${donneesDemande.nomConjoint || 'N/A'} ${donneesDemande.postnomConjoint ? (donneesDemande.postnomConjoint + ' ') : ''}${donneesDemande.prenomConjoint || 'N/A'}
+                </p>
                 <p>a été célébré le ${donneesDemande.dateMariage ? new Date(donneesDemande.dateMariage).toLocaleDateString("fr-FR") : 'N/A'} dans notre commune.</p>
                 <p>Délivré à Kinshasa, le ${currentDate}.</p>
               </div>

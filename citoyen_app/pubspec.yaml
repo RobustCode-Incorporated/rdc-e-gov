@@ -1,5 +1,7 @@
 name: citoyen_app
 description: A new Flutter project.
+version: 1.0.0+1
+
 # The following line ensures that your project uses the Material Design theme.
 # To add assets to your application, add an assets section, like this:
 environment: # AJOUTEZ CETTE SECTION
