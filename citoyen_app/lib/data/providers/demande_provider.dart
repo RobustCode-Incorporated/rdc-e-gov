@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:open_filex/open_filex.dart';
+import 'package:http_parser/http_parser.dart'; // NOUVEAU
 
 import 'package:citoyen_app/config/app_constants.dart';
 import 'package:citoyen_app/data/models/demande_model.dart';
@@ -29,6 +31,12 @@ class DemandeProvider with ChangeNotifier {
   List<Statut> get statuts => _statuts;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  // Méthode pour définir l'état de chargement (utilisée dans le front-end)
+  void setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
 
   /// Récupère toutes les demandes effectuées par le citoyen connecté.
   Future<void> fetchMyDemandes() async {
@@ -72,9 +80,6 @@ class DemandeProvider with ChangeNotifier {
   }
 
   /// Récupère la liste de tous les statuts possibles.
-  // lib/data/providers/demande_provider.dart
-// ...
-
   Future<void> fetchStatuts() async {
     _isLoading = true;
     _errorMessage = null;
@@ -82,7 +87,6 @@ class DemandeProvider with ChangeNotifier {
     try {
       final String? authToken = _authProvider.authToken;
       if (authToken != null) {
-        // CORRECTION ICI : Ajouter le paramètre nommé authToken
         _statuts = await _demandeRepository.getStatuts(authToken: authToken);
       } else {
         _errorMessage = 'Token d\'authentification manquant.';
@@ -95,32 +99,66 @@ class DemandeProvider with ChangeNotifier {
     }
   }
 
-// ...
-
   /// Crée une nouvelle demande de document.
   Future<bool> createDemande(Map<String, dynamic> demandeData) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    setLoading(true);
     try {
       final String? authToken = _authProvider.authToken;
       if (authToken == null) {
         _errorMessage = 'Token d\'authentification manquant. Veuillez vous reconnecter.';
-        _isLoading = false;
-        notifyListeners();
+        setLoading(false);
         return false;
       }
 
       await _demandeRepository.createDemande(demandeData, authToken: authToken);
       await fetchMyDemandes();
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
       return true;
     } catch (e) {
       _errorMessage = 'Erreur lors de la création de la demande: $e';
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
       return false;
+    }
+  }
+
+  /// Télécharge un fichier image sur le serveur et retourne son URL.
+  Future<String?> uploadImage(File imageFile) async {
+    setLoading(true);
+    final String? authToken = _authProvider.authToken;
+    if (authToken == null) {
+      _errorMessage = 'Token d\'authentification manquant.';
+      setLoading(false);
+      return null;
+    }
+
+    try {
+      final uri = Uri.parse('${AppConstants.baseUrl}/demandes/upload');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $authToken';
+      
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'photo', // Ce nom de champ doit correspondre à ce qu'attend votre backend
+          imageFile.path,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = json.decode(response.body);
+        return responseData['url']; // Le backend doit retourner l'URL ici
+      } else {
+        _errorMessage = 'Échec de l\'upload de la photo: ${response.body}';
+        return null;
+      }
+    } catch (e) {
+      _errorMessage = 'Erreur lors de l\'upload de la photo: $e';
+      return null;
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -157,6 +195,7 @@ class DemandeProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
+        // Utilise getTemporaryDirectory() qui fonctionne sur iOS et Android pour les fichiers temporaires
         final directory = await getTemporaryDirectory();
         final filePath = '${directory.path}/document_$demandeId.pdf';
         

@@ -1,3 +1,4 @@
+// lib/screens/demandes/form_carte_identite_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -88,15 +89,12 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
-                    // Informations du citoyen pré-remplies
                     _buildInfoDisplayRow(context, 'Nom', citoyen.nom),
                     _buildInfoDisplayRow(context, 'Postnom', citoyen.postnom),
                     _buildInfoDisplayRow(context, 'Prénom', citoyen.prenom),
                     _buildInfoDisplayRow(context, 'Date de Naissance', DateFormat('dd/MM/yyyy').format(citoyen.dateNaissance)),
                     _buildInfoDisplayRow(context, 'Lieu de Naissance', citoyen.lieuNaissance),
                     _buildInfoDisplayRow(context, 'Sexe', citoyen.sexe),
-                    // Note: Commune de résidence est gérée par communeId dans le modèle citoyen.
-
                     const SizedBox(height: 24.0),
                     Text(
                       'Informations Complémentaires',
@@ -108,10 +106,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _nomPereController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nom du Père',
-                        prefixIcon: Icon(Icons.person),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Nom du Père', prefixIcon: Icon(Icons.person)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez entrer le nom du père';
@@ -123,10 +118,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _prenomPereController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prénom du Père',
-                        prefixIcon: Icon(Icons.person),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Prénom du Père', prefixIcon: Icon(Icons.person)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez entrer le prénom du père';
@@ -138,10 +130,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _nomMereController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nom de la Mère',
-                        prefixIcon: Icon(Icons.person),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Nom de la Mère', prefixIcon: Icon(Icons.person)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez entrer le nom de la mère';
@@ -153,10 +142,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _prenomMereController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prénom de la Mère',
-                        prefixIcon: Icon(Icons.person),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Prénom de la Mère', prefixIcon: Icon(Icons.person)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez entrer le prénom de la mère';
@@ -168,10 +154,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _professionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Profession',
-                        prefixIcon: Icon(Icons.work),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Profession', prefixIcon: Icon(Icons.work)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez entrer votre profession';
@@ -183,10 +166,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     const SizedBox(height: 16.0),
                     DropdownButtonFormField<String>(
                       value: _selectedEtatCivil,
-                      decoration: const InputDecoration(
-                        labelText: 'État Civil',
-                        prefixIcon: Icon(Icons.favorite),
-                      ),
+                      decoration: const InputDecoration(labelText: 'État Civil', prefixIcon: Icon(Icons.favorite)),
                       hint: const Text('Sélectionnez votre état civil'),
                       items: <String>['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf(ve)']
                           .map<DropdownMenuItem<String>>((String value) {
@@ -236,9 +216,7 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                         onPressed: _pickImage,
                         icon: const Icon(Icons.photo_camera),
                         label: const Text('Choisir une photo'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGreen,
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentGreen),
                       ),
                     ),
                     const SizedBox(height: 24.0),
@@ -252,6 +230,16 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                                   return;
                                 }
 
+                                // ÉTAPE 1: Uploader l'image
+                                final photoUrl = await demandeProvider.uploadImage(_pickedImage!);
+                                
+                                if (photoUrl == null) {
+                                  // Le message d'erreur est déjà géré par le provider
+                                  _showSnackBar(demandeProvider.errorMessage ?? 'Échec de l\'upload de la photo.', isError: true);
+                                  return;
+                                }
+
+                                // ÉTAPE 2: Créer le corps de la demande avec l'URL de la photo
                                 final donneesCarteIdentite = {
                                   'nomPere': _nomPereController.text,
                                   'prenomPere': _prenomPereController.text,
@@ -259,20 +247,17 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                                   'prenomMere': _prenomMereController.text,
                                   'profession': _professionController.text,
                                   'etatCivil': _selectedEtatCivil,
-                                  // Pour la photo, tu devras envoyer le fichier et obtenir une URL du backend
-                                  // Ici, on envoie le chemin local, mais le backend attendra une URL après upload.
-                                  // Il faut implémenter l'upload réel de l'image au backend avant de soumettre la demande.
-                                  // Pour cet exemple, je vais juste envoyer le chemin du fichier comme placeholder.
-                                  'photoIdentitePath': _pickedImage!.path,
-                                  'nucCitoyen': citoyen.numeroUnique, // Le NUC est ajouté ici
+                                  'photoUrl': photoUrl, // Utilisation de l'URL
+                                  'nucCitoyen': citoyen.numeroUnique,
                                 };
 
+                                // ÉTAPE 3: Soumettre la demande
                                 final success = await demandeProvider.createDemande({
                                   'citoyenId': citoyen.id,
                                   'communeId': citoyen.commune.id,
                                   'typeDemande': 'carte_identite',
                                   'donneesJson': donneesCarteIdentite,
-                                  'statutId': 1, // 'soumise' par défaut
+                                  'statutId': 1,
                                 });
 
                                 if (success) {
@@ -295,7 +280,6 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
     );
   }
 
-  // Helper pour afficher les infos pré-remplies
   Widget _buildInfoDisplayRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),

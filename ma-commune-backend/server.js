@@ -31,6 +31,14 @@ app.use(express.json());
 // il sera accessible via http://votre_serveur:4000/documents/acte_naissance_123.pdf
 app.use('/documents', express.static(path.join(__dirname, 'documents')));
 
+// --- NOUVELLE LIGNE ---
+// **SERVIR LES IMAGES UPLOADEES**
+// Cette ligne rend le contenu du dossier './public/uploads' accessible via l'URL /uploads
+// C'est nécessaire pour que le navigateur puisse charger l'image
+// à partir de l'URL stockée dans votre base de données.
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+
 
 // Route de test racine
 app.get('/', (req, res) => {

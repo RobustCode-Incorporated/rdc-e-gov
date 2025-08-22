@@ -5,9 +5,13 @@ const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 const qrcode = require('qrcode');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const DOCUMENTS_DIR = path.join(__dirname, '..', 'documents');
+const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
 
+fs.mkdir(UPLOADS_DIR, { recursive: true }).catch(console.error);
 // Fonction utilitaire pour obtenir l'ID d'un statut par son nom
 const getStatutIdByName = async (name) => {
   const statut = await Statut.findOne({ where: { nom: name } });
@@ -122,6 +126,37 @@ module.exports = {
       console.error('Erreur getDemandesToValidate:', error);
       res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
+  },
+
+  async uploadImage(req, res) {
+    upload.single('photo')(req, res, async (err) => {
+      if (err) {
+        console.error('Erreur lors de l\'upload du fichier:', err);
+        return res.status(500).json({ message: 'Échec de l\'upload du fichier.', error: err.message });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Aucun fichier photo fourni.' });
+      }
+
+      try {
+        // Crée un nom de fichier unique
+        const uniqueFilename = `${uuidv4()}${path.extname(req.file.originalname)}`;
+        const destinationPath = path.join(UPLOADS_DIR, uniqueFilename);
+
+        // Déplace le fichier temporaire vers le dossier public des uploads
+        await fs.rename(req.file.path, destinationPath);
+
+        // Construit l'URL publique de l'image
+        // Assurez-vous que votre serveur Express sert le dossier 'public' statiquement
+        const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${uniqueFilename}`;
+
+        res.status(200).json({ url: photoUrl });
+      } catch (error) {
+        console.error('Erreur lors du déplacement ou de la gestion du fichier uploadé:', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la gestion de l\'upload.', error: error.message });
+      }
+    });
   },
 
   async generateDocument(req, res) {
@@ -311,7 +346,7 @@ module.exports = {
               <h1>CARTE D'IDENTITÉ NATIONALE</h1>
               <div class="card-layout">
                 <div class="card-left">
-                  <img src="https://placehold.co/100x100/003DA5/FFFFFF?text=PHOTO" alt="Photo de profil" class="profile-pic">
+                  <img src="${donneesDemande.photoUrl || 'https://placehold.co/100x100/003DA5/FFFFFF?text=PHOTO'}" alt="Photo de profil" class="profile-pic">
                   <div class="qr-code">
                     <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="80" height="80">
                   </div>
@@ -640,7 +675,7 @@ module.exports = {
               <h1>CARTE D'IDENTITÉ NATIONALE</h1>
               <div class="card-layout">
                 <div class="card-left">
-                  <img src="https://placehold.co/100x100/003DA5/FFFFFF?text=PHOTO" alt="Photo de profil" class="profile-pic">
+                  <img src="${donneesDemande.photoUrl || 'https://placehold.co/100x100/003DA5/FFFFFF?text=PHOTO'}" alt="Photo de profil" class="profile-pic">
                   <div class="qr-code">
                     <img src="${qrCodeDataURL}" alt="QR Code de vérification" width="80" height="80">
                   </div>

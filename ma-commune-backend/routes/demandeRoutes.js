@@ -7,6 +7,9 @@ const auth = require('../middleware/authMiddleware');
 // Route pour le citoyen connecté DOIT être définie avant les routes génériques
 router.get('/me', auth(['citoyen']), demandeController.getMyDemandes);
 
+// Route d'upload d'image
+router.post('/upload', demandeController.uploadImage); // C'est ici que la fonction est appelée
+
 // Route pour récupérer les documents validés
 router.get('/validated', auth(['citoyen']), demandeController.getValidatedDocuments);
 
