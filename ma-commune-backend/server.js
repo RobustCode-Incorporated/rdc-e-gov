@@ -39,6 +39,8 @@ app.use('/documents', express.static(path.join(__dirname, 'documents')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
 
 // Route de test racine
 app.get('/', (req, res) => {

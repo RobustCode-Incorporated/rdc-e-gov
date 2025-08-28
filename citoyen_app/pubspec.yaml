@@ -23,6 +23,7 @@ dependencies:
   path_provider: ^2.1.0
   permission_handler: ^11.0.1
   open_filex: ^4.3.2
+  
 
   cupertino_icons: ^1.0.6
 
@@ -34,4 +35,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/ # Assurez-vous que ce chemin est correct si vous l'avez
+    - assets/images/app_logo.png

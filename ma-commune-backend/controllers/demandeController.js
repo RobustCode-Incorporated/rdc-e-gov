@@ -233,34 +233,72 @@ module.exports = {
         case 'acte_naissance':
           htmlContent = `
             <style>
-              body { font-family: Arial, sans-serif; margin: 40px; }
-              h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
-            </style>
-            <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
-              </div>
-              <h1>ACTE DE NAISSANCE</h1>
-              <div class="content">
-                <p>Je soussigné, le Bourgmestre de la commune de ${citoyen.commune?.nom || 'XXX'},</p>
-                <p>atteste que l'enfant :</p>
-                <p><strong>Nom :</strong> ${donneesDemande.nomEnfant || 'N/A'}</p>
-                <p><strong>Postnom :</strong> ${donneesDemande.postnomEnfant || 'N/A'}</p>
-                <p><strong>Prénom :</strong> ${donneesDemande.prenomEnfant || 'N/A'}</p>
-                <p><strong>Sexe :</strong> ${donneesDemande.sexeEnfant || 'N/A'}</p>
-                <p><strong>Né(e) le :</strong> ${donneesDemande.dateNaissanceEnfant ? new Date(donneesDemande.dateNaissanceEnfant).toLocaleDateString("fr-FR") : 'N/A'}</p>
-                <p><strong>Lieu de naissance :</strong> ${donneesDemande.lieuNaissanceEnfant || 'N/A'}, ${communeNaissanceEnfant?.nom || ''}, ${provinceNaissanceEnfant?.nom || ''}</p>
-                <p><strong>Père :</strong> ${donneesDemande.prenomPere || 'N/A'} ${donneesDemande.nomPere || 'N/A'}</p>
-                <p><strong>Mère :</strong> ${donneesDemande.prenomMere || 'N/A'} ${donneesDemande.nomMere || 'N/A'}</p>
-                <p>Délivré à Kinshasa, le ${currentDate}.</p>
-              </div>
-              ${baseSignatureBlock}
-            </body>
+  body { font-family: Arial, sans-serif; margin: 40px; display: flex; flex-direction: column; min-height: 100vh; }
+  h1 { color: #003da5; text-align: center; }
+  .header-with-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  .header-image {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px;
+  }
+  .header-text {
+    flex-grow: 1;
+    text-align: center;
+  }
+  .header-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-bottom: 1px solid #ccc;
+  }
+  .content {
+    margin-top: 30px;
+    line-height: 1.6;
+    flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+  }
+  .footer-line {
+    height: 3px; /* Épaisseur de la ligne */
+    width: 100%; /* S'étend sur toute la largeur de la page */
+    background: linear-gradient(to right, #0095c9, #fff24b, #db3832);
+    margin-top: auto; /* Pousse la ligne vers le bas de la page */
+  }
+</style>
+<body>
+  <div class="header-with-image">
+    <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+    <div class="header-text">
+      <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+      <p>PROVINCE DE KINSHASA</p>
+      <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+    </div>
+    <div class="header-line"></div>
+  </div>
+  <h1>ACTE DE NAISSANCE</h1>
+  <div class="content">
+    <p>Je soussigné, le Bourgmestre de la commune de ${citoyen.commune?.nom || 'XXX'},</p>
+    <p>atteste que l'enfant :</p>
+    <p><strong>Nom :</strong> ${donneesDemande.nomEnfant || 'N/A'}</p>
+    <p><strong>Postnom :</strong> ${donneesDemande.postnomEnfant || 'N/A'}</p>
+    <p><strong>Prénom :</strong> ${donneesDemande.prenomEnfant || 'N/A'}</p>
+    <p><strong>Sexe :</strong> ${donneesDemande.sexeEnfant || 'N/A'}</p>
+    <p><strong>Né(e) le :</strong> ${donneesDemande.dateNaissanceEnfant ? new Date(donneesDemande.dateNaissanceEnfant).toLocaleDateString("fr-FR") : 'N/A'}</p>
+    <p><strong>Lieu de naissance :</strong> ${donneesDemande.lieuNaissanceEnfant || 'N/A'}, ${communeNaissanceEnfant?.nom || ''}, ${provinceNaissanceEnfant?.nom || ''}</p>
+    <p><strong>Père :</strong> ${donneesDemande.prenomPere || 'N/A'} ${donneesDemande.nomPere || 'N/A'}</p>
+    <p><strong>Mère :</strong> ${donneesDemande.prenomMere || 'N/A'} ${donneesDemande.nomMere || 'N/A'}</p>
+    <p>Délivré à Kinshasa, le ${currentDate}.</p>
+  </div>
+  ${baseSignatureBlock}
+  <div class="footer-line"></div>
+</body>
           `;
           break;
         case 'acte_mariage':
@@ -272,11 +310,14 @@ module.exports = {
               .content { margin-top: 30px; line-height: 1.6; }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>ACTE DE MARIAGE</h1>
               <div class="content">
@@ -303,11 +344,14 @@ module.exports = {
               .content { margin-top: 30px; line-height: 1.6; }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>CERTIFICAT DE RÉSIDENCE</h1>
               <div class="content">
@@ -337,11 +381,14 @@ module.exports = {
               .card-info p { margin: 5px 0; }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>CARTE D'IDENTITÉ NATIONALE</h1>
               <div class="card-layout">
@@ -547,11 +594,14 @@ module.exports = {
               }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>ACTE DE NAISSANCE</h1>
               <div class="content">
@@ -587,11 +637,14 @@ module.exports = {
               }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>ACTE DE MARIAGE</h1>
               <div class="content">
@@ -625,11 +678,14 @@ module.exports = {
               }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>CERTIFICAT DE RÉSIDENCE</h1>
               <div class="content">
@@ -666,11 +722,14 @@ module.exports = {
               }
             </style>
             <body>
-              <div class="header">
-                <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-                <p>PROVINCE DE KINSHASA</p>
-                <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-                <hr>
+              <div class="header-with-image">
+                <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                <div class="header-text">
+                  <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                  <p>PROVINCE DE KINSHASA</p>
+                  <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                </div>
+                <div class="header-line"></div>
               </div>
               <h1>CARTE D'IDENTITÉ NATIONALE</h1>
               <div class="card-layout">
