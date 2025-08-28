@@ -268,7 +268,7 @@ module.exports = {
   .footer-line {
     height: 3px; /* Épaisseur de la ligne */
     width: 100%; /* S'étend sur toute la largeur de la page */
-    background: linear-gradient(to right, #0095c9, #fff24b, #db3832);
+    background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
     margin-top: auto; /* Pousse la ligne vers le bas de la page */
   }
 </style>
@@ -306,8 +306,42 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
+              }
             </style>
             <body>
               <div class="header-with-image">
@@ -340,8 +374,42 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
+              }
             </style>
             <body>
               <div class="header-with-image">
@@ -583,14 +651,48 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
               .bourgmestre-name {
                 font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
                 font-size: 1.4em;
                 margin-top: 5px;
                 font-weight: bold;
                 color: #000;
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
               }
             </style>
             <body>
@@ -626,14 +728,48 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
               .bourgmestre-name {
                 font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
                 font-size: 1.4em;
                 margin-top: 5px;
                 font-weight: bold;
                 color: #000;
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
               }
             </style>
             <body>
@@ -667,14 +803,48 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
               .bourgmestre-name {
                 font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
                 font-size: 1.4em;
                 margin-top: 5px;
                 font-weight: bold;
                 color: #000;
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
               }
             </style>
             <body>
@@ -706,19 +876,53 @@ module.exports = {
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               h1 { color: #003da5; text-align: center; }
-              .header, .footer { text-align: center; font-size: 0.8em; }
-              .content { margin-top: 30px; line-height: 1.6; }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding-bottom: 10px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 80px;
+              }
+              .header-text {
+                flex-grow: 1;
+                text-align: center;
+              }
+              .header-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px solid #ccc;
+              }
               .card-layout { display: flex; border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: 20px auto; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
               .card-left { flex: 1; text-align: center; padding-right: 20px; }
               .card-right { flex: 2; }
               .profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #003da5; }
               .card-info p { margin: 5px 0; }
+              .content {
+                margin-top: 30px;
+                line-height: 1.6;
+                flex-grow: 1; /* Permet au contenu de s'étendre et de pousser le footer vers le bas */
+              }
               .bourgmestre-name {
                 font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
                 font-size: 1.4em;
                 margin-top: 5px;
                 font-weight: bold;
                 color: #000;
+              }
+              .footer-line {
+                height: 3px; /* Épaisseur de la ligne */
+                width: 100%; /* S'étend sur toute la largeur de la page */
+                background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                margin-top: auto; /* Pousse la ligne vers le bas de la page */
               }
             </style>
             <body>
