@@ -21,11 +21,23 @@ const getStatutIdByName = async (name) => {
 module.exports = {
   async getAllDemandes(req, res) {
     try {
-      // Inclut toutes les associations nécessaires pour afficher les détails complets
+      let whereClause = {};
+  
+      // Si l'utilisateur est un bourgmestre (admin), filtrer par sa commune
+      if (req.user && req.user.role === 'admin' && req.user.communeId) {
+        whereClause = { communeId: req.user.communeId };
+      }
+  
       const demandes = await Demande.findAll({
-        include: [{ model: Citoyen, as: 'citoyen' }, { model: Statut, as: 'statut' }, { model: Agent, as: 'agent' }],
+        where: whereClause,
+        include: [
+          { model: Citoyen, as: 'citoyen' },
+          { model: Statut, as: 'statut' },
+          { model: Agent, as: 'agent' }
+        ],
         order: [['createdAt', 'DESC']]
       });
+  
       res.json(demandes);
     } catch (error) {
       console.error('Erreur getAllDemandes:', error);
@@ -542,7 +554,13 @@ module.exports = {
                   left: 0;
                   width: 100%;
                   height: 3px;
-                  background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
+                  background: linear-gradient(to right, 
+                              #0095c9 0%, #0095c9 33.33%, 
+                              #fff24b 33.33%, #fff24b 66.66%, 
+                              #db3832 66.66%, #db3832 100%);
+                  border-bottom-left-radius: 10px;
+                  border-bottom-right-radius: 10px;
+                  margin: 0;
                 }
               </style>
               <body>
@@ -731,7 +749,7 @@ module.exports = {
       }
 
       let htmlContent = ''; 
-      // Define the signature block with dynamic name and desired styling
+      // Define the signature block with dynamic name and desired styling (for non-carte_identite docs)
       const signatureBlockSigned = `
         <div class="signature-section" style="text-align: right; margin-top: 50px;">
           <p>Le Bourgmestre</p>
@@ -983,158 +1001,170 @@ module.exports = {
             </body>
           `;
           break;
-          case 'carte_identite':
-            htmlContent = `
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  margin: 0;
-                  padding: 0;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  height: 100vh;
-                  background: #f0f0f0;
-                }
-                .id-card {
-                  width: 336px;   /* Dimensions d'une carte de crédit en pixels */
-                  height: 204px;
-                  border: 1px solid #003da5;
-                  border-radius: 10px;
-                  background: #fff;
-                  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-                  display: flex;
-                  flex-direction: column;
-                  padding: 6px;
-                  box-sizing: border-box;
-                  position: relative;
-                }
-                .header-with-image {
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  position: relative;
-                  margin-bottom: 4px;
-                }
-                .header-image {
-                  position: absolute;
-                  left: 0;
-                  top: 50%;
-                  transform: translateY(-50%);
-                  width: 28px;
-                }
-                .header-text {
-                  font-size: 8px;
-                  line-height: 1.2;
-                  text-align: center;
-                  flex-grow: 1;
-                }
-                .header-text h3 {
-                  margin: 0;
-                  font-size: 9px;
-                  color: #003da5;
-                }
-                .card-body {
-                  display: flex;
-                  flex: 1;
-                }
-                .card-left {
-                  flex: 1;
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  text-align: center;
-                }
-                .card-right {
-                  flex: 2;
-                  font-size: 9px;
-                  line-height: 1.2;
-                  padding-left: 6px;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: space-between; /* Permet de pousser la signature en bas */
-                }
-                .profile-pic {
-                  width: 60px; /* Redimensionnement pour plus d'espace */
-                  height: 60px;
-                  border-radius: 5px;
-                  object-fit: cover;
-                  border: 1px solid #003da5;
-                  margin-bottom: 4px;
-                }
-                .qr-code img {
-                  width: 50px; /* Redimensionnement du QR Code */
-                  height: 50px;
-                }
-                .card-info p {
-                  margin: 1px 0; /* Réduction des marges pour compacter les infos */
-                  font-size: 7px;
-                  line-height: 1.1;
-                }
-                .verification_link {
-                  font-size: 5px; /* La plus petite taille pour qu'il tienne */
-                  text-align: center;
-                  margin-top: 2px;
-                  word-break: break-all; /* Essentiel pour le lien */
-                }
-                .signature {
-                  font-size: 7px; /* Redimensionnement pour la signature */
-                  text-align: right;
-                  margin-top: auto; /* Pousse la signature vers le bas de .card-right */
-                  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-                }
-                .footer-line {
-                  position: absolute;
-                  bottom: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 3px;
-                  background: linear-gradient(to right, #0095c9 0%, #0095c9 33.33%, #fff24b 33.33%, #fff24b 66.66%, #db3832 66.66%, #db3832 100%);
-                }
-              </style>
-              <body>
-  <div class="id-card">
-    <div class="header-with-image">
-      <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
-      <div class="header-text">
-        <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
-        <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
-      </div>
-    </div>
-    
-    <div class="card-body">
-      <div class="card-left">
-        <img src="${donneesDemande.photoUrl || 'https://placehold.co/60x60/003DA5/FFFFFF?text=PHOTO'}" alt="Photo de profil" class="profile-pic">
-        <div class="qr-code">
-          <img src="${qrCodeDataURL}" alt="QR Code">
-        </div>
-        <div class="verification_link">
-          <p>${verificationLink || 'Lien de vérification'}</p>
-        </div>
-      </div>
-      <div class="card-right">
-        <div class="card-info">
-          <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
-          <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
-          <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
-          <p><strong>Né(e) le :</strong> ${citoyen.dateNaissance ? new Date(citoyen.dateNaissance).toLocaleDateString("fr-FR") : 'N/A'}</p>
-          <p><strong>Sexe :</strong> ${citoyen.sexe || 'N/A'}</p>
-          <p><strong>Lieu :</strong> ${citoyen.lieuNaissance || 'N/A'}</p>
-          <p><strong>N° Unique :</strong> ${citoyen.numeroUnique || 'N/A'}</p>
-          <p><strong>Délivrée le :</strong> ${currentDate}</p>
-        </div>
-        <div class="signature">
-          <p>Le Bourgmestre</p>
-          <p class="bourgmestre-name">${signatureBlockSigned || 'Signature Numérique'}</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="footer-line"></div>
-  </div>
-</body>
-            `;
-            break;
+        case 'carte_identite':
+          htmlContent = `
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background: #f0f0f0;
+              }
+              .id-card {
+                width: 336px;   /* Dimensions d'une carte de crédit en pixels */
+                height: 204px;
+                border: 1px solid #003da5;
+                border-radius: 10px;
+                background: #fff;
+                box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+                display: flex;
+                flex-direction: column;
+                padding: 6px;
+                box-sizing: border-box;
+                position: relative;
+              }
+              .header-with-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                margin-bottom: 4px;
+              }
+              .header-image {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 28px;
+              }
+              .header-text {
+                font-size: 8px;
+                line-height: 1.2;
+                text-align: center;
+                flex-grow: 1;
+              }
+              .header-text h3 {
+                margin: 0;
+                font-size: 9px;
+                color: #003da5;
+              }
+              .card-body {
+                display: flex;
+                flex: 1;
+              }
+              .card-left {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+              }
+              .card-right {
+                flex: 2;
+                font-size: 9px;
+                line-height: 1.2;
+                padding-left: 6px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+              }
+              .profile-pic {
+                width: 60px;
+                height: 60px;
+                border-radius: 5px;
+                object-fit: cover;
+                border: 1px solid #003da5;
+                margin-bottom: 4px;
+              }
+              .qr-code img {
+                width: 50px;
+                height: 50px;
+              }
+              .card-info p {
+                margin: 1px 0;
+                font-size: 7px;
+                line-height: 1.1;
+              }
+              .verification_link {
+                font-size: 5px;
+                text-align: center;
+                margin-top: 2px;
+                word-break: break-all;
+              }
+              .signature {
+                font-size: 7px;
+                text-align: right;
+                margin-top: auto;
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+              }
+              .bourgmestre-name {
+                font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+                font-size: 8px;
+                margin-top: 2px;
+                font-weight: bold;
+                color: #000;
+                text-align: right;
+              }
+              .footer-line {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 2px; /* Épaisseur réduite à 2px */
+                background: linear-gradient(to right, 
+                            #0095c9 0%, #0095c9 33.33%, 
+                            #fff24b 33.33%, #fff24b 66.66%, 
+                            #db3832 66.66%, #db3832 100%);
+                margin-left: 2px;
+                margin-right: 2px;
+                margin: 0;
+              }
+            </style>
+            <body>
+              <div class="id-card">
+                <div class="header-with-image">
+                  <img src="http://localhost:4000/assets/images/app_logo.png" alt="Logo" class="header-image">
+                  <div class="header-text">
+                    <h3>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h3>
+                    <p>COMMUNE DE ${citoyen.commune?.nom?.toUpperCase() || 'XXX'}</p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="card-left">
+                    <img src="${donneesDemande.photoUrl || 'https://placehold.co/60x60/003DA5/FFFFFF?text=PHOTO'}" alt="Photo de profil" class="profile-pic">
+                    <div class="qr-code">
+                      <img src="${qrCodeDataURL}" alt="QR Code">
+                    </div>
+                    <div class="verification_link">
+                      <p>${verificationUrl || 'Lien de vérification'}</p>
+                    </div>
+                  </div>
+                  <div class="card-right">
+                    <div class="card-info">
+                      <p><strong>Nom :</strong> ${citoyen.nom || 'N/A'}</p>
+                      <p><strong>Postnom :</strong> ${citoyen.postnom || 'N/A'}</p>
+                      <p><strong>Prénom :</strong> ${citoyen.prenom || 'N/A'}</p>
+                      <p><strong>Né(e) le :</strong> ${citoyen.dateNaissance ? new Date(citoyen.dateNaissance).toLocaleDateString("fr-FR") : 'N/A'}</p>
+                      <p><strong>Sexe :</strong> ${citoyen.sexe || 'N/A'}</p>
+                      <p><strong>Lieu :</strong> ${citoyen.lieuNaissance || 'N/A'}</p>
+                      <p><strong>N° Unique :</strong> ${citoyen.numeroUnique || 'N/A'}</p>
+                      <p><strong>Délivrée le :</strong> ${currentDate}</p>
+                    </div>
+                    <div class="signature">
+                      <p>Le Bourgmestre</p>
+                      <p class="bourgmestre-name">${bourgmestreName}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="footer-line"></div>
+              </div>
+            </body>
+          `;
+          break;
         default:
           htmlContent = `
             <body>
