@@ -9,6 +9,8 @@
       <div class="navbar-right">
         <router-link to="/agents" class="nav-btn">👥 Agents</router-link>
         <router-link to="/demandes" class="nav-btn">📄 Demandes</router-link>
+        <!-- Bouton de déconnexion -->
+        <button @click="logout" class="logout-btn">🚪 Déconnexion</button>
       </div>
     </header>
 
@@ -88,6 +90,10 @@ export default {
         this.loading = false;
       }
     },
+    logout() {
+      localStorage.removeItem("token"); // supprimer le token
+      this.$router.push("/"); // rediriger vers la page de connexion
+    },
   },
   async mounted() {
     await this.fetchStats();
@@ -117,16 +123,23 @@ export default {
   display: flex;
   gap: 12px;
 }
-.nav-btn {
+.nav-btn,
+.logout-btn {
   background: white;
   color: #003da5;
   padding: 8px 14px;
   border-radius: 6px;
   font-weight: bold;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
 }
-.nav-btn:hover {
+.nav-btn:hover,
+.logout-btn:hover {
   background: #f1f1f1;
+}
+.logout-btn {
+  color: red;
 }
 
 /* Contenu principal */

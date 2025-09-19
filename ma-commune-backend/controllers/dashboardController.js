@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { AdministrateurGeneral, Commune, Agent, Demande, Statut } = require('../models');
+const { AdministrateurGeneral, Commune, Agent, Demande, Statut, Citoyen } = require('../models');
 
 module.exports = {
   // Statistiques pour administrateur général (gouverneur)
@@ -65,7 +65,6 @@ module.exports = {
 
       const communeId = commune.id;
 
-      // Helper pour compter demandes par nom statut
       const countDemandesByStatut = async (statutNom) => {
         return await Demande.count({
           where: { communeId },
@@ -95,6 +94,68 @@ module.exports = {
     } catch (error) {
       console.error('Erreur getStatsBourgmestre:', error);
       res.status(500).json({ message: "Erreur serveur", error: error.message });
+    }
+  },
+
+  // Statistiques population pour administrateur général (gouverneur)
+  // populationStats pour admin général
+  async populationStats(req, res) {
+    try {
+      const adminGeneralId = req.user.id;
+      const adminGeneral = await AdministrateurGeneral.findByPk(adminGeneralId);
+      if (!adminGeneral) {
+        return res.status(404).json({ message: 'Administrateur général introuvable.' });
+      }
+      const provinceId = adminGeneral.provinceId;
+
+      // Récupérer tous les citoyens (ignore temporairement la relation si vide)
+      const citoyens = await Citoyen.findAll({
+        include: [{
+          model: Commune,
+          as: 'commune',
+          required: false, // <-- évite de filtrer si la relation manque
+          where: { provinceId }
+        }]
+      });
+
+      // Calcul population
+      const totalPopulation = citoyens.length;
+      const hommes = citoyens.filter(c => c.sexe?.toLowerCase() === 'homme').length;
+      const femmes = citoyens.filter(c => c.sexe?.toLowerCase() === 'femme').length;
+
+      // Tranches d'âge
+      let jeune = 0, adulte = 0, senior = 0;
+      const currentYear = new Date().getFullYear();
+      citoyens.forEach(c => {
+        if (!c.dateNaissance) return;
+        const age = currentYear - new Date(c.dateNaissance).getFullYear();
+        if (age <= 17) jeune++;
+        else if (age <= 59) adulte++;
+        else senior++;
+      });
+
+      // Renvoi sécurisé pour frontend
+      res.status(200).json({
+        totalPopulation,
+        hommes,
+        femmes,
+        jeune,
+        adulte,
+        senior
+      });
+
+    } catch (error) {
+      console.error('Erreur populationStats:', error);
+      res.status(500).json({
+        message: 'Erreur lors du calcul de la population',
+        hommes: 0,
+        femmes: 0,
+        jeune: 0,
+        adulte: 0,
+        senior: 0,
+        totalPopulation: 0,
+        error: error.message
+      });
     }
   }
 };

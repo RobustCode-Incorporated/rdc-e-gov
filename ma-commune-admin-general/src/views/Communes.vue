@@ -1,47 +1,63 @@
 <template>
   <div class="page-communes">
-    <header class="header-logo">
-      <img src="../assets/logo_rdc.png" alt="Logo Gouvernement RDC" class="logo" />
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="navbar-left">
+        <img src="../assets/logo_rdc.png" alt="Logo RDC" class="logo" />
+        <h1>Gestions des Communes</h1>
+      </div>
+      <div class="navbar-right">
+        <router-link to="/admin-general/dashboard" class="nav-btn">Accueil</router-link>
+        <router-link to="/administrateurs" class="nav-btn">Bourgmestres</router-link>
+        <button @click="logout" class="logout-btn">Déconnexion</button>
+      </div>
     </header>
 
-    <h2>📍 Communes de votre province</h2>
+    <!-- Contenu -->
+    <main class="content">
+      <h2>📍 Communes de votre province</h2>
 
-    <section v-if="loading">Chargement...</section>
+      <section v-if="loading" class="loading">Chargement...</section>
 
-    <section v-else>
-      <table>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Code</th>
-            <th>Bourgmestre</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="commune in communes" :key="commune.id">
-            <td>{{ commune.nom }}</td>
-            <td>{{ commune.code || "-" }}</td>
-            <td>
-              <template v-if="commune.administrateur">
-                ✅ {{ formatNomComplet(commune.administrateur) }}
-              </template>
-              <template v-else>
-                ❌ Non assigné
-              </template>
-            </td>
-            <td>
-              <template v-if="commune.administrateur">
-                <button @click="removeBourgmestre(commune)">Supprimer le bourgmestre</button>
-              </template>
-              <template v-else>
-                <button @click="goToAssignBourgmestre">Assigner un bourgmestre</button>
-              </template>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <section v-else>
+        <table class="communes-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Code</th>
+              <th>Bourgmestre</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="commune in communes" :key="commune.id">
+              <td>{{ commune.nom }}</td>
+              <td>{{ commune.code || "-" }}</td>
+              <td>
+                <template v-if="commune.administrateur">
+                  ✅ {{ formatNomComplet(commune.administrateur) }}
+                </template>
+                <template v-else>
+                  ❌ Non assigné
+                </template>
+              </td>
+              <td>
+                <template v-if="commune.administrateur">
+                  <button @click="removeBourgmestre(commune)" class="action-btn remove-btn">
+                    Supprimer le bourgmestre
+                  </button>
+                </template>
+                <template v-else>
+                  <button @click="goToAssignBourgmestre" class="action-btn assign-btn">
+                    Assigner un bourgmestre
+                  </button>
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
   </div>
 </template>
 
@@ -57,6 +73,10 @@ export default {
     };
   },
   methods: {
+    logout() {
+      localStorage.removeItem("token");
+      this.$router.push("/");
+    },
     formatNomComplet(admin) {
       return [admin.nom, admin.prenom, admin.postnom].filter(Boolean).join(' ');
     },
@@ -94,7 +114,7 @@ export default {
     },
 
     goToAssignBourgmestre() {
-      this.$router.push('/administrateurs'); // Page d'ajout/gestion bourgmestre
+      this.$router.push('/administrateurs');
     },
 
     async removeBourgmestre(commune) {
@@ -120,42 +140,115 @@ export default {
 </script>
 
 <style scoped>
-.page-communes {
-  padding: 30px;
-  font-family: "Inter", sans-serif;
-}
-.header-logo {
+/* --- NAVBAR --- */
+.navbar {
   display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  align-items: center;
+  background: #003da5;
+  padding: 12px 24px;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .logo {
-  max-height: 60px;
-  object-fit: contain;
+  height: 42px;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+.navbar-right {
+  display: flex;
+  gap: 14px;
 }
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 12px;
-}
-th {
-  background-color: #003da5;
-  color: white;
-}
-button {
-  background: #003da5;
-  color: white;
-  border: none;
+.nav-btn {
+  background: white;
+  color: #003da5;
   padding: 8px 16px;
   border-radius: 6px;
-  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
-button:hover {
-  background: #00276f;
+.nav-btn:hover {
+  background: #f1f1f1;
+  transform: translateY(-2px);
+}
+.logout-btn {
+  background: #db3832;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.logout-btn:hover {
+  background: #b52b26;
+  transform: translateY(-2px);
+}
+
+/* --- CONTENU --- */
+.content {
+  padding: 32px;
+  font-family: "Inter", sans-serif;
+  background: #f7f7f7;
+  min-height: calc(100vh - 70px);
+}
+
+/* --- TABLEAU COMMUNES --- */
+.communes-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: 20px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.communes-table th,
+.communes-table td {
+  padding: 14px 16px;
+  text-align: left;
+}
+.communes-table thead {
+  background: #003da5;
+  color: white;
+  font-weight: 600;
+}
+.communes-table tbody tr {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.communes-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.action-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.assign-btn {
+  background: #104b71;
+  color: white;
+}
+.assign-btn:hover {
+  background: #0e2c5a;
+}
+.remove-btn {
+  background: #db3832;
+  color: white;
+}
+.remove-btn:hover {
+  background: #b52b26;
+}
+.loading {
+  font-size: 18px;
+  color: #003da5;
 }
 </style>
