@@ -1,16 +1,18 @@
 <template>
   <div class="page-demandes">
+    <!-- Navbar -->
     <header class="navbar">
       <div class="navbar-left">
         <img src="../assets/logo_rdc.png" alt="Logo RDC" class="logo" />
         <h1>Gestion des Demandes</h1>
       </div>
       <div class="navbar-right">
-        <router-link to="/dashboard-bourgmestre" class="nav-btn">🏠 Dashboard</router-link>
-        <router-link to="/agents" class="nav-btn">🛡️ Agents</router-link>
+        <router-link to="/dashboard-bourgmestre" class="nav-btn">Accueil</router-link>
+        <router-link to="/agents" class="nav-btn">Agents</router-link>
       </div>
     </header>
 
+    <!-- Filtres -->
     <section class="filters">
       <label for="statut">Filtrer par statut :</label>
       <select v-model="filtreStatut" @change="fetchDemandes">
@@ -21,9 +23,12 @@
       </select>
     </section>
 
+    <!-- Loading / Error -->
     <section v-if="loading" class="loading">Chargement des demandes...</section>
+    <section v-else-if="error" class="error">⚠️ {{ error }}</section>
 
-    <section v-else>
+    <!-- Table des demandes -->
+    <section v-else class="table-wrapper">
       <table>
         <thead>
           <tr>
@@ -88,23 +93,22 @@ export default {
         en_traitement: "En traitement",
         validee: "Validée",
       },
+      error: null,
     };
   },
   methods: {
     async fetchDemandes() {
       this.loading = true;
+      this.error = null;
       try {
         const token = localStorage.getItem("token");
         let url = "http://localhost:4000/api/demandes";
-        if (this.filtreStatut) {
-          url += `?statut=${this.filtreStatut}`;
-        }
-        const res = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        if (this.filtreStatut) url += `?statut=${this.filtreStatut}`;
+        const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
         this.demandes = res.data;
-      } catch (error) {
-        console.error("Erreur chargement demandes", error);
+      } catch (err) {
+        console.error("Erreur chargement demandes", err);
+        this.error = "Impossible de charger les demandes.";
       } finally {
         this.loading = false;
       }
@@ -117,9 +121,9 @@ export default {
             headers: { Authorization: `Bearer ${token}` },
           });
           alert("Demande validée et document signé avec succès !");
-          this.fetchDemandes(); // Rafraîchir la liste
-        } catch (error) {
-          console.error("Erreur de validation:", error.response?.data);
+          this.fetchDemandes();
+        } catch (err) {
+          console.error("Erreur de validation:", err);
           alert("Erreur lors de la validation. Le document doit être 'en traitement'.");
         }
       }
@@ -155,100 +159,90 @@ export default {
 </script>
 
 <style scoped>
-/* Styles existants pour .page-demandes */
-/* Navbar */
+/* --- NAVBAR --- */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #003da5;
-  padding: 10px 20px;
+  padding: 12px 24px;
   color: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.logo {
-  height: 40px;
-}
-.navbar-right {
-  display: flex;
-  gap: 12px;
-}
+.navbar-left { display: flex; align-items: center; gap: 12px; }
+.logo { height: 42px; }
+.navbar-right { display: flex; gap: 14px; }
 .nav-btn {
   background: white;
   color: #003da5;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-weight: bold;
+  font-weight: 600;
   text-decoration: none;
+  transition: all 0.3s ease;
 }
-.nav-btn:hover {
-  background: #f1f1f1;
-}
+.nav-btn:hover { background: #f1f1f1; transform: translateY(-2px); }
 
-/* Filters */
+/* --- FILTERS --- */
 .filters {
-  margin: 20px 0;
+  margin: 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.filters label {
-  font-weight: bold;
-  margin-right: 10px;
-}
+.filters label { font-weight: 600; color: #003da5; }
 .filters select {
-  padding: 6px;
-  border-radius: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 150px;
 }
 
-/* Table */
+/* --- TABLE --- */
+.table-wrapper {
+  overflow-x: auto;
+}
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
+th, td {
+  padding: 12px;
+  text-align: left;
 }
 th {
   background: #003da5;
   color: white;
+  font-weight: 600;
 }
+tr:nth-child(even) { background: #f7f7f7; }
 button {
-  background: #104b71;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 5px;
   border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
-button:hover {
-  background: #0e2c5a;
-}
-.validate-btn {
-  background: #28a745;
-}
-.validate-btn:hover {
-  background: #218838;
-}
-.view-btn {
-  background: #104b71;
-}
-.view-btn:hover {
-  background: #0e2c5a;
-}
+.validate-btn { background: #28a745; color: white; }
+.validate-btn:hover { background: #218838; }
+.view-btn { background: #104b71; color: white; }
+.view-btn:hover { background: #0e2c5a; }
 .document-link-cell {
   background: #007bff;
   color: white;
-  padding: 5px 8px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   text-decoration: none;
+  font-weight: 600;
 }
-.document-link-cell:hover {
-  background: #0056b3;
-}
+.document-link-cell:hover { background: #0056b3; }
+
+/* --- LOADING / ERROR --- */
+.loading { font-size: 18px; color: #003da5; margin-top: 16px; }
+.error { font-size: 16px; color: red; background: #ffe6e6; padding: 10px; border-radius: 6px; margin-top: 16px; }
 
 </style>

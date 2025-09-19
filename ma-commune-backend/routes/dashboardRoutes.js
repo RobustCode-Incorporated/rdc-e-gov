@@ -12,4 +12,5 @@ router.get('/population', auth(['admin_general']), dashboardController.populatio
 // Accès réservé aux bourgmestres (admins avec rôle 'admin')
 router.get('/bourgmestre', auth(['admin']), dashboardController.getStatsBourgmestre);
 
+
 module.exports = router;

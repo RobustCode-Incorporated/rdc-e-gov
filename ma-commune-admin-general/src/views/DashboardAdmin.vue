@@ -156,6 +156,7 @@ export default {
         // Mise à jour des donuts
         this.genderData.datasets[0].data = [this.stats.hommes, this.stats.femmes];
         this.ageData.datasets[0].data = [this.stats.jeunes, this.stats.adultes, this.stats.seniors];
+        this.genderChartKey++;
       } catch (error) {
         console.error("Erreur chargement des stats", error);
       } finally {
