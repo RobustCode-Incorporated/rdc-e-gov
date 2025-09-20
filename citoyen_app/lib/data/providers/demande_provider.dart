@@ -218,4 +218,53 @@ class DemandeProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Télécharge le fichier .pkpass depuis le backend et retourne le chemin local
+  Future<String?> addToWallet(int demandeId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final String? authToken = _authProvider.authToken;
+      if (authToken == null) {
+        _errorMessage = 'Token d\'authentification manquant.';
+        _isLoading = false;
+        notifyListeners();
+        return null;
+      }
+
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/demandes/$demandeId/wallet'),
+        headers: {'Authorization': 'Bearer $authToken'},
+      );
+
+      if (response.statusCode == 200) {
+        final directory = await getTemporaryDirectory();
+        final filePath = '${directory.path}/document_$demandeId.pkpass';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        final result = await OpenFilex.open(filePath);
+        if (result.type != ResultType.done) {
+          _errorMessage = "Impossible d'ouvrir le fichier Wallet. Erreur: ${result.message}";
+        } else {
+          _errorMessage = null; // Réinitialise le message d'erreur en cas de succès
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return filePath;
+      } else {
+        _errorMessage = 'Erreur lors de la récupération du fichier Wallet: ${response.statusCode}';
+        return null;
+      }
+    } catch (e) {
+      _errorMessage = 'Erreur lors de l\'ajout au Wallet: $e';
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

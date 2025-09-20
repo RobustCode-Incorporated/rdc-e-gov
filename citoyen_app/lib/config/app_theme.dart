@@ -6,6 +6,7 @@ class AppColors {
   static const Color primaryBlue = Color(0xFF0095C9);
   static const Color primaryYellow = Color(0xFFFFF24B);
   static const Color primaryRed = Color(0xFFDB3832);
+  static const Color primaryGreen = Color(0xFF28A745); // ou la couleur que tu veux
 
   // Couleurs secondaires / texte
   static const Color darkText = Color(0xFF323230);
@@ -19,6 +20,7 @@ class AppColors {
   static const Color darkBrown = Color(0xFF63230B);
   static const Color darkPurple = Color(0xFF9C0055);
   static const Color lightBrown = Color(0xFFCBAC7E);
+  
 
   // Ajoute d'autres couleurs si nécessaire selon ta palette
 }

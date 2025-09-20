@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:citoyen_app/config/app_theme.dart';
 import 'package:citoyen_app/data/models/demande_model.dart';
 import 'package:citoyen_app/data/providers/demande_provider.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 
 class MyDocumentsScreen extends StatefulWidget {
   const MyDocumentsScreen({super.key});
@@ -16,7 +19,6 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
   @override
   void initState() {
     super.initState();
-    // Au démarrage de l'écran, on demande au provider de charger les documents validés
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DemandeProvider>(context, listen: false).fetchValidatedDocuments();
     });
@@ -31,6 +33,26 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     );
   }
 
+  Future<void> _addToWallet(Demande document, DemandeProvider provider) async {
+    if (!Platform.isIOS) {
+      _showSnackBar('Apple Wallet n’est disponible que sur iOS', isError: true);
+      return;
+    }
+
+    _showSnackBar('Ajout au Wallet en cours...');
+    try {
+      final filePath = await provider.addToWallet(document.id);
+      if (filePath != null) {
+        await OpenFilex.open(filePath);
+        _showSnackBar('Carte ajoutée à votre Wallet avec succès !');
+      } else {
+        _showSnackBar('Erreur lors de l’ajout au Wallet', isError: true);
+      }
+    } catch (e) {
+      _showSnackBar('Erreur : $e', isError: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,12 +61,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       ),
       body: Consumer<DemandeProvider>(
         builder: (context, demandeProvider, child) {
-          // Affiche un indicateur de chargement si les données sont en cours de récupération
           if (demandeProvider.isLoading) {
             return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
           }
 
-          // Affiche un message d'erreur si la récupération a échoué
           if (demandeProvider.errorMessage != null) {
             return Center(
               child: Text(
@@ -54,7 +74,6 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             );
           }
 
-          // Affiche un message si aucun document validé n'est trouvé
           if (demandeProvider.validatedDocuments.isEmpty) {
             return Center(
               child: Text(
@@ -64,7 +83,6 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             );
           }
 
-          // Affiche la liste des documents validés sous forme de cartes
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: demandeProvider.validatedDocuments.length,
@@ -74,71 +92,76 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                 margin: const EdgeInsets.only(bottom: 16.0),
                 elevation: 3,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                child: InkWell(
-                  // lib/screens/my_documents_screen.dart
-// ... imports existants
-
-// ... le reste du code
-                  onTap: () async {
-                    _showSnackBar('Téléchargement en cours...');
-                    
-                    // Appel de la nouvelle méthode du provider
-                    await demandeProvider.downloadAndOpenDocument(document.id);
-
-                    // Affiche un message de succès ou d'erreur après l'opération
-                    if (demandeProvider.errorMessage != null) {
-                      _showSnackBar(demandeProvider.errorMessage!, isError: true);
-                    } else {
-                      _showSnackBar('Document téléchargé et ouvert avec succès.');
-                    }
-                  },
-// ... le reste du code
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          document.typeDemande.replaceAll('_', ' ').toUpperCase(), // Nom du type de document
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.darkText,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8.0),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, size: 18, color: AppColors.brownText),
-                            const SizedBox(width: 8.0),
-                            Text(
-                              // Assumons que createdAt est la date de validation ou utilise une nouvelle propriété si ton modèle Demande a une dateValidation
-                              'Date de validation: ${DateFormat('dd/MM/yyyy').format(document.createdAt)}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.brownText,
-                              ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        document.typeDemande.replaceAll('_', ' ').toUpperCase(),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColors.darkText,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8.0),
-                        Row(
-                          children: [
-                            Icon(Icons.description, size: 18, color: AppColors.primaryBlue),
-                            const SizedBox(width: 8.0),
-                            Expanded(
-                              child: Text(
-                                'Télécharger / Voir le document',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 18, color: AppColors.brownText),
+                          const SizedBox(width: 8.0),
+                          Text(
+                            'Date de validation: ${DateFormat('dd/MM/yyyy').format(document.createdAt)}',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.brownText,
                                 ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Icon(Icons.description, size: 18, color: AppColors.primaryBlue),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Text(
+                              'Télécharger / Voir le document',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.file_download, color: AppColors.primaryBlue, size: 24),
+                            onPressed: () async {
+                              _showSnackBar('Téléchargement en cours...');
+                              await demandeProvider.downloadAndOpenDocument(document.id);
+                              if (demandeProvider.errorMessage != null) {
+                                _showSnackBar(demandeProvider.errorMessage!, isError: true);
+                              } else {
+                                _showSnackBar('Document téléchargé et ouvert avec succès.');
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8.0),
+                      if (Platform.isIOS)
+                        Row(
+                          children: [
+                            Icon(Icons.credit_card, size: 18, color: AppColors.primaryGreen),
+                            const SizedBox(width: 8.0),
+                            ElevatedButton(
+                              onPressed: () => _addToWallet(document, demandeProvider),
+                              child: const Text('Ajouter au Wallet'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryGreen,
+                                foregroundColor: Colors.white,
                               ),
                             ),
-                            Icon(Icons.file_download, size: 24, color: AppColors.primaryBlue),
                           ],
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               );

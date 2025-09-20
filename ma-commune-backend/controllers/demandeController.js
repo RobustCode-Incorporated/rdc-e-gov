@@ -3,10 +3,13 @@ const { Demande, Citoyen, Statut, Agent, Commune, Province, Administrateur } = r
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs'); // For createWriteStream
 const { v4: uuidv4 } = require('uuid');
 const qrcode = require('qrcode');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+
+const passkit = require('passkit-generator');
 
 const DOCUMENTS_DIR = path.join(__dirname, '..', 'documents');
 const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
@@ -1293,6 +1296,62 @@ module.exports = {
     } catch (error) {
       console.error('Erreur getAllStatuts:', error);
       return res.status(500).json({ message: 'Erreur serveur lors de la récupération des statuts', error: error.message });
+    }
+  },
+
+  // --- Apple Wallet Pass generation endpoint ---
+  async generateWalletPass(req, res) {
+    try {
+      const { id } = req.params;
+      const demande = await Demande.findByPk(id, {
+        include: [{ model: Citoyen, as: 'citoyen' }]
+      });
+      if (!demande) return res.status(404).json({ message: 'Demande non trouvée.' });
+      const citoyen = demande.citoyen;
+      if (!citoyen) return res.status(404).json({ message: 'Citoyen non trouvé.' });
+
+      // Apple Wallet Pass configuration
+      // (You must provide your own certificates and correct values)
+      const pass = new passkit.Pass({
+        passTypeIdentifier: 'pass.com.yourapp.e-services', // <-- replace with your identifier
+        teamIdentifier: 'YOUR_TEAM_ID', // <-- replace with your team id
+        organizationName: 'RDC Digital',
+        serialNumber: `ID-${citoyen.numeroUnique}`,
+        description: 'Carte citoyen',
+        backgroundColor: 'rgb(0,61,165)',
+        labelColor: 'white',
+        foregroundColor: 'white',
+        barcode: {
+          message: `https://your-backend/verify-document?token=${demande.verificationToken || 'N/A'}`,
+          format: 'PKBarcodeFormatQR',
+          messageEncoding: 'iso-8859-1'
+        },
+        generic: {
+          primaryFields: [
+            { key: 'nom', label: 'Nom', value: citoyen.nom },
+            { key: 'prenom', label: 'Prénom', value: citoyen.prenom },
+            { key: 'numero', label: 'ID Unique', value: citoyen.numeroUnique }
+          ]
+        }
+      });
+
+      // Save .pkpass file to documents folder and send to client
+      const pkpassFile = path.join(DOCUMENTS_DIR, `wallet_${demande.id}.pkpass`);
+      await fs.mkdir(DOCUMENTS_DIR, { recursive: true });
+
+      const stream = await pass.generate();
+      const ws = fsSync.createWriteStream(pkpassFile);
+      stream.pipe(ws);
+      ws.on('finish', () => {
+        res.download(pkpassFile, `wallet_${demande.id}.pkpass`);
+      });
+      ws.on('error', err => {
+        console.error('Erreur lors de l\'écriture du .pkpass:', err);
+        res.status(500).json({ message: 'Erreur lors de la génération du Wallet pass.' });
+      });
+    } catch (err) {
+      console.error('Erreur génération Wallet Pass:', err);
+      res.status(500).json({ message: 'Erreur lors de la génération du Wallet pass.', error: err.message });
     }
   }
 };
