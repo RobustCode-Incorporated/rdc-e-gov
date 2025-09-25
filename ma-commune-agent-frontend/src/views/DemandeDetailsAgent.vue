@@ -6,7 +6,7 @@
         <h1>Détail demande</h1>
       </div>
       <div class="navbar-right">
-        <router-link :to="{ name: 'DemandesAgent' }" class="nav-btn">← Retour</router-link>
+        <router-link to="/demandes" class="nav-btn">Toutes les demandes</router-link>
       </div>
     </header>
 
@@ -215,7 +215,23 @@ export default {
 .form-row { margin:12px 0; display:flex; flex-direction:column; gap:8px; }
 textarea { resize:vertical; padding:8px; border-radius:6px; border:1px solid #ddd; }
 .actions { display:flex; gap:8px; margin-top:10px; }
-button { background:#003da5; color:#fff; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
+button {
+  background: #003da5;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.nav-btn {
+  background: white;
+  color: #003da5;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
 button.ghost { background:#eee; color:#333; }
 .document-link-container { margin-top: 15px; }
 .document-link {

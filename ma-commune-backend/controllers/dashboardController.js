@@ -137,6 +137,45 @@ module.exports = {
   },
 
   // ------------------------
+  // Statistiques pour Agent
+  // ------------------------
+  async getStatsAgent(req, res) {
+    try {
+      const agentId = req.user.id;
+  
+      const agent = await Agent.findByPk(agentId);
+      if (!agent) {
+        return res.status(404).json({ message: "Agent introuvable" });
+      }
+  
+      const communeId = agent.communeId;
+  
+      const totalDemandes = await Demande.count({ where: { communeId } });
+      const demandesSoumises = await Demande.count({ where: { communeId, statutId: 1 } });
+      const demandesEnTraitement = await Demande.count({ where: { communeId, statutId: 2 } });
+      const demandesValidees = await Demande.count({ where: { communeId, statutId: 3 } });
+  
+      res.status(200).json({
+        totalDemandes,
+        demandesSoumises,
+        demandesEnTraitement,
+        demandesValidees
+      });
+  
+    } catch (error) {
+      console.error('Erreur getStatsAgent:', error);
+      res.status(500).json({
+        message: "Erreur serveur",
+        totalDemandes: 0,
+        demandesSoumises: 0,
+        demandesEnTraitement: 0,
+        demandesValidees: 0,
+        error: error.message
+      });
+    }
+  },
+
+  // ------------------------
   // Statistiques population pour Admin Général
   // ------------------------
   async populationStats(req, res) {

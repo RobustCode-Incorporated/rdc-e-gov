@@ -7,21 +7,24 @@
         <h1>Tableau de bord Agent</h1>
       </div>
       <div class="navbar-right">
-        <!-- Boutons de navigation vers les pages demandes -->
-        <router-link to="/demandes" class="nav-btn">📋 Toutes les demandes</router-link>
-        <button @click="logout" class="logout-btn">🚪 Déconnexion</button>
+        <router-link to="/demandes" class="nav-btn">Toutes les demandes</router-link>
+        <button @click="logout" class="logout-btn">Déconnexion</button>
       </div>
     </header>
 
     <!-- Statistiques -->
     <section class="stats">
       <div class="stat-card">
-        <h2>{{ stats.totalDemandes }}</h2>
+        <h2>{{ stats.demandesATraiter }}</h2>
         <p>Demandes à traiter</p>
       </div>
       <div class="stat-card">
-        <h2>{{ stats.demandesTraitees }}</h2>
-        <p>Demandes traitées</p>
+        <h2>{{ stats.demandesTraiteesParAgent }}</h2>
+        <p>Demandes en traitement par vous</p>
+      </div>
+      <div class="stat-card">
+        <h2>{{ stats.demandesValidees }}</h2>
+        <p>Demandes validées par le bourgmestre</p>
       </div>
     </section>
 
@@ -62,8 +65,9 @@ export default {
   data() {
     return {
       stats: {
-        totalDemandes: 0,
-        demandesTraitees: 0,
+        demandesATraiter: 0,
+        demandesTraiteesParAgent: 0,
+        demandesValidees: 0,
       },
       demandes: [],
       selectedDemandeId: null,
@@ -76,7 +80,10 @@ export default {
         const res = await axios.get("http://localhost:4000/api/agents/dashboard", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        this.stats = res.data;
+        // ⚠️ Vérifie que l'API renvoie bien les 3 champs
+        this.stats.demandesATraiter = res.data.demandesSoumises || 0;
+        this.stats.demandesTraiteesParAgent = res.data.demandesEnTraitement || 0;
+        this.stats.demandesValidees = res.data.demandesValidees || 0;
       } catch (err) {
         console.error("Erreur chargement stats agent", err);
       }
@@ -133,7 +140,6 @@ export default {
 </script>
 
 <style scoped>
-/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -180,7 +186,6 @@ export default {
   background: #f1f1f1;
 }
 
-/* Stats */
 .stats {
   display: flex;
   gap: 20px;
@@ -203,7 +208,6 @@ export default {
   color: #666;
 }
 
-/* Table */
 .demandes {
   margin: 20px;
 }

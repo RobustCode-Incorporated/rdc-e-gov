@@ -6,8 +6,8 @@
         <h1>Demandes à traiter</h1>
       </div>
       <div class="navbar-right">
-        <router-link to="/dashboard" class="nav-btn">🏠 Dashboard</router-link>
-        <button @click="logout" class="logout-btn">🚪 Déconnexion</button>
+        <router-link to="/dashboard" class="nav-btn">Dashboard</router-link>
+        <button @click="logout" class="logout-btn">Déconnexion</button>
       </div>
     </header>
 

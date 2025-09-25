@@ -1303,12 +1303,32 @@ module.exports = {
   async generateWalletPass(req, res) {
     try {
       const { id } = req.params;
+  
       const demande = await Demande.findByPk(id, {
         include: [{ model: Citoyen, as: 'citoyen' }]
       });
-      if (!demande) return res.status(404).json({ message: 'Demande non trouvée.' });
+  
+      if (!demande) {
+        return res.status(404).json({ message: 'Demande non trouvée.' });
+      }
+  
       const citoyen = demande.citoyen;
-      if (!citoyen) return res.status(404).json({ message: 'Citoyen non trouvé.' });
+      if (!citoyen) {
+        return res.status(404).json({ message: 'Citoyen non trouvé.' });
+      }
+  
+      // 📌 Liste des documents exclus
+      const documentsExclus = ['acte_residence', 'acte_mariage', 'acte_naissance'];
+  
+      // 👉 Si document exclu → on répond par 204 No Content (silencieux et propre)
+      if (documentsExclus.includes(demande.type_document)) {
+        return res.status(204).send(); 
+      }
+  
+      // 👉 Ici tu continues ton traitement normal
+      // génération du wallet pass...
+      return res.json({ message: 'WalletPass généré avec succès.' });
+  
 
       // Apple Wallet Pass configuration
       // (You must provide your own certificates and correct values)
