@@ -14,13 +14,15 @@
 
     <!-- Filtres -->
     <section class="filters">
+      <input v-model="q" @input="applyFilters" placeholder="Rechercher par citoyen, type, commentaires..." />
       <label for="statut">Filtrer par statut :</label>
-      <select v-model="filtreStatut" @change="fetchDemandes">
+      <select v-model="filtreStatut" @change="applyFilters">
         <option value="">Toutes</option>
         <option value="soumise">Soumise</option>
         <option value="en_traitement">En traitement</option>
         <option value="validee">Validée</option>
       </select>
+      <button @click="fetchDemandes">Rafraîchir</button>
     </section>
 
     <!-- Loading / Error -->
@@ -41,7 +43,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="demande in demandes" :key="demande.id">
+          <tr v-for="demande in pagedDemandes" :key="demande.id">
             <td>{{ getTypeDemandeLabel(demande.typeDemande) }}</td>
             <td>{{ formatNomComplet(demande.citoyen) }}</td>
             <td>{{ formatDate(demande.createdAt) }}</td>
@@ -72,8 +74,18 @@
               </button>
             </td>
           </tr>
+          <tr v-if="filteredDemandes.length === 0">
+            <td colspan="6" class="empty">Aucune demande trouvée</td>
+          </tr>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div class="pagination" v-if="pages > 1">
+        <button :disabled="page === 1" @click="page-- && applyFilters()">←</button>
+        <span>Page {{ page }} / {{ pages }}</span>
+        <button :disabled="page === pages" @click="page++ && applyFilters()">→</button>
+      </div>
     </section>
   </div>
 </template>
@@ -88,13 +100,46 @@ export default {
       loading: true,
       demandes: [],
       filtreStatut: "",
+      q: "",
       statutMapping: {
         soumise: "Soumise",
         en_traitement: "En traitement",
         validee: "Validée",
       },
       error: null,
+      page: 1,
+      perPage: 10,
     };
+  },
+  computed: {
+    filteredDemandes() {
+      let arr = this.demandes.slice();
+
+      if (this.filtreStatut) {
+        arr = arr.filter(d => (d.statut && d.statut.nom ? d.statut.nom : d.statut) === this.filtreStatut);
+      }
+
+      if (this.q && this.q.trim()) {
+        const q = this.q.toLowerCase();
+        arr = arr.filter(d =>
+          (d.citoyen && (
+            (d.citoyen.nom || "").toLowerCase().includes(q) ||
+            (d.citoyen.prenom || "").toLowerCase().includes(q)
+          )) ||
+          (d.typeDemande || "").toLowerCase().includes(q) ||
+          (d.commentaires || "").toLowerCase().includes(q)
+        );
+      }
+
+      return arr;
+    },
+    pages() {
+      return Math.max(1, Math.ceil(this.filteredDemandes.length / this.perPage));
+    },
+    pagedDemandes() {
+      const start = (this.page - 1) * this.perPage;
+      return this.filteredDemandes.slice(start, start + this.perPage);
+    }
   },
   methods: {
     async fetchDemandes() {
@@ -102,16 +147,19 @@ export default {
       this.error = null;
       try {
         const token = localStorage.getItem("token");
-        let url = "http://localhost:4000/api/demandes";
-        if (this.filtreStatut) url += `?statut=${this.filtreStatut}`;
+        const url = "http://localhost:4000/api/demandes";
         const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
         this.demandes = res.data;
+        this.page = 1;
       } catch (err) {
         console.error("Erreur chargement demandes", err);
         this.error = "Impossible de charger les demandes.";
       } finally {
         this.loading = false;
       }
+    },
+    applyFilters() {
+      if (this.page > this.pages) this.page = this.pages;
     },
     async validateDemande(id) {
       if (confirm("Êtes-vous sûr de vouloir valider et signer ce document ?")) {
@@ -191,7 +239,7 @@ export default {
   gap: 12px;
 }
 .filters label { font-weight: 600; color: #003da5; }
-.filters select {
+.filters select, .filters input {
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
@@ -245,4 +293,11 @@ button {
 .loading { font-size: 18px; color: #003da5; margin-top: 16px; }
 .error { font-size: 16px; color: red; background: #ffe6e6; padding: 10px; border-radius: 6px; margin-top: 16px; }
 
+/* --- PAGINATION --- */
+.pagination {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 </style>
