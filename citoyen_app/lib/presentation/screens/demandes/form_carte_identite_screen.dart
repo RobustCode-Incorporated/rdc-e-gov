@@ -38,12 +38,49 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImage = File(pickedFile.path);
-      });
-    }
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Prendre une photo'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile = await _picker.pickImage(
+                    source: ImageSource.camera,
+                    imageQuality: 50,
+                  );
+                  if (pickedFile != null) {
+                    setState(() {
+                      _pickedImage = File(pickedFile.path);
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choisir depuis la galerie'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile = await _picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 50,
+                  );
+                  if (pickedFile != null) {
+                    setState(() {
+                      _pickedImage = File(pickedFile.path);
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -84,9 +121,9 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     Text(
                       'Informations Générales',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.darkText,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: AppColors.darkText,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 16.0),
                     _buildInfoDisplayRow(context, 'Nom', citoyen.nom),
@@ -99,101 +136,65 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                     Text(
                       'Informations Complémentaires',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.darkText,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: AppColors.darkText,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _nomPereController,
                       decoration: const InputDecoration(labelText: 'Nom du Père', prefixIcon: Icon(Icons.person)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le nom du père';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer le nom du père' : null,
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _prenomPereController,
                       decoration: const InputDecoration(labelText: 'Prénom du Père', prefixIcon: Icon(Icons.person)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le prénom du père';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer le prénom du père' : null,
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _nomMereController,
                       decoration: const InputDecoration(labelText: 'Nom de la Mère', prefixIcon: Icon(Icons.person)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le nom de la mère';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer le nom de la mère' : null,
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _prenomMereController,
                       decoration: const InputDecoration(labelText: 'Prénom de la Mère', prefixIcon: Icon(Icons.person)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le prénom de la mère';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer le prénom de la mère' : null,
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
                       controller: _professionController,
                       decoration: const InputDecoration(labelText: 'Profession', prefixIcon: Icon(Icons.work)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre profession';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer votre profession' : null,
                     ),
-                    const SizedBox(height: 16.0),
+                    const SizedBox(height: 24.0),
+                    Text(
+                      'État Civil',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.darkText,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                     DropdownButtonFormField<String>(
                       value: _selectedEtatCivil,
-                      decoration: const InputDecoration(labelText: 'État Civil', prefixIcon: Icon(Icons.favorite)),
+                      decoration: const InputDecoration(prefixIcon: Icon(Icons.favorite)),
                       hint: const Text('Sélectionnez votre état civil'),
                       items: <String>['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf(ve)']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedEtatCivil = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez sélectionner votre état civil';
-                        }
-                        return null;
-                      },
+                          .map((String value) => DropdownMenuItem(value: value, child: Text(value)))
+                          .toList(),
+                      onChanged: (String? newValue) => setState(() => _selectedEtatCivil = newValue),
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez sélectionner votre état civil' : null,
                     ),
                     const SizedBox(height: 24.0),
                     Text(
                       'Photo d\'Identité (obligatoire)',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.darkText,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: AppColors.darkText,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 16.0),
                     Center(
@@ -229,17 +230,12 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                                   _showSnackBar('Veuillez ajouter une photo d\'identité.', isError: true);
                                   return;
                                 }
-
-                                // ÉTAPE 1: Uploader l'image
                                 final photoUrl = await demandeProvider.uploadImage(_pickedImage!);
-                                
                                 if (photoUrl == null) {
-                                  // Le message d'erreur est déjà géré par le provider
                                   _showSnackBar(demandeProvider.errorMessage ?? 'Échec de l\'upload de la photo.', isError: true);
                                   return;
                                 }
 
-                                // ÉTAPE 2: Créer le corps de la demande avec l'URL de la photo
                                 final donneesCarteIdentite = {
                                   'nomPere': _nomPereController.text,
                                   'prenomPere': _prenomPereController.text,
@@ -247,11 +243,10 @@ class _FormCarteIdentiteScreenState extends State<FormCarteIdentiteScreen> {
                                   'prenomMere': _prenomMereController.text,
                                   'profession': _professionController.text,
                                   'etatCivil': _selectedEtatCivil,
-                                  'photoUrl': photoUrl, // Utilisation de l'URL
+                                  'photoUrl': photoUrl,
                                   'nucCitoyen': citoyen.numeroUnique,
                                 };
 
-                                // ÉTAPE 3: Soumettre la demande
                                 final success = await demandeProvider.createDemande({
                                   'citoyenId': citoyen.id,
                                   'communeId': citoyen.commune.id,
