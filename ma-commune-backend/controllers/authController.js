@@ -2,8 +2,10 @@
 const { Administrateur, Agent, Citoyen } = require('../models');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { sendNUCEmail } = require('../utils/mailer'); // ✅ nouveau
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ma_cle_super_secrete';
+console.log('BREVO_API_KEY:', process.env.BREVO_API_KEY);
 
 // Connexion pour tous les types d’utilisateurs
 exports.loginUser = async (req, res) => {
@@ -51,12 +53,12 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Inscription citoyen
+// ✅ Inscription citoyen avec envoi du NUC par e-mail
 exports.registerCitoyen = async (req, res) => {
   try {
-    const { nom, postnom, prenom, dateNaissance, sexe, lieuNaissance, communeId, password } = req.body;
+    const { nom, postnom, prenom, dateNaissance, sexe, lieuNaissance, communeId, password, email } = req.body;
 
-    if (!nom || !prenom || !dateNaissance || !sexe || !lieuNaissance || !communeId || !password) {
+    if (!nom || !prenom || !dateNaissance || !sexe || !lieuNaissance || !communeId || !password || !email) {
       return res.status(400).json({ message: 'Tous les champs obligatoires doivent être remplis.' });
     }
 
@@ -71,9 +73,14 @@ exports.registerCitoyen = async (req, res) => {
       sexe,
       lieuNaissance,
       communeId,
+      email,
       numeroUnique,
       password: hashedPassword
     });
+
+    // ✅ Envoi automatique du NUC par e-mail
+    const nomComplet = `${prenom} ${nom}`;
+    await sendNUCEmail(email, nomComplet, numeroUnique);
 
     const token = jwt.sign(
       { id: citoyen.id, role: 'citoyen', communeId: citoyen.communeId },
@@ -81,7 +88,11 @@ exports.registerCitoyen = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.status(201).json({ message: 'Inscription réussie', token, citoyen });
+    res.status(201).json({
+      message: 'Inscription réussie. Votre NUC vous a été envoyé par e-mail.',
+      token,
+      citoyen
+    });
 
   } catch (error) {
     console.error('Erreur inscription citoyen:', error);

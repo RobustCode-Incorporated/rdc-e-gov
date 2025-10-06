@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nomController = TextEditingController();
   final TextEditingController _postnomController = TextEditingController();
   final TextEditingController _prenomController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dateNaissanceController = TextEditingController();
   final TextEditingController _lieuNaissanceController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -48,6 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nomController.dispose();
     _postnomController.dispose();
     _prenomController.dispose();
+    _emailController.dispose();
     _dateNaissanceController.dispose();
     _lieuNaissanceController.dispose();
     _passwordController.dispose();
@@ -144,6 +146,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icon(Icons.person),
                       ),
                       validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer votre prénom' : null,
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // EMAIL
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Adresse e-mail',
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre adresse e-mail';
+                        }
+                        final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                        if (!emailRegex.hasMatch(value)) {
+                          return 'Veuillez entrer une adresse e-mail valide';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16.0),
 
@@ -331,6 +354,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           'nom': _nomController.text,
                                           'postnom': _postnomController.text.isEmpty ? null : _postnomController.text,
                                           'prenom': _prenomController.text,
+                                          'email': _emailController.text,
                                           'dateNaissance': _dateNaissanceController.text,
                                           'sexe': _selectedSexe,
                                           'lieuNaissance': _lieuNaissanceController.text,
