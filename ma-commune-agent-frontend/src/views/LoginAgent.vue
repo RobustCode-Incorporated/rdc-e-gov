@@ -104,7 +104,7 @@
     font-family: "Ysabeau Office", sans-serif;
     font-size: 20px;
     margin-top: 10px;
-    color: #0e2c5a;
+    color: #003da5;
   }
   
   .login-form {
@@ -119,7 +119,7 @@
   label {
     font-weight: bold;
     font-family: "ABeeZee", sans-serif;
-    color: #0e2c5a;
+    color: #003da5;
   }
   
   input {
@@ -131,7 +131,7 @@
   }
   
   .login-btn {
-    background-color: #104b71;
+    background-color: #003da5;
     color: white;
     border: none;
     padding: 12px;

@@ -6,7 +6,8 @@ import 'package:citoyen_app/data/models/commune_model.dart';
 import 'package:citoyen_app/data/models/province_model.dart';
 import 'package:citoyen_app/data/providers/auth_provider.dart';
 import 'package:citoyen_app/data/providers/commune_provider.dart';
-import 'package:citoyen_app/utils/app_router.dart'; // Import pour AppRouter
+import 'package:citoyen_app/utils/app_router.dart';
+import 'privacy_policy_screen.dart'; // Assure-toi que ce fichier existe
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -31,6 +32,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+  // ✅ Politique de confidentialité
+  bool _acceptedPrivacy = false;
+
   @override
   void initState() {
     super.initState();
@@ -54,9 +58,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)), // Exemple: propose 20 ans en arrière par défaut
-      firstDate: DateTime(1900), // Date la plus ancienne possible
-      lastDate: DateTime.now(), // La date la plus récente est aujourd'hui
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -64,11 +68,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               primary: AppColors.primaryBlue,
               onPrimary: Colors.white,
               onSurface: AppColors.darkText,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryBlue,
-              ),
             ),
           ),
           child: child!,
@@ -105,6 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Consumer2<AuthProvider, CommuneProvider>(
               builder: (context, authProvider, communeProvider, child) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Inscrivez-vous',
@@ -114,45 +114,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                     ),
                     const SizedBox(height: 24.0),
+
+                    // NOM
                     TextFormField(
                       controller: _nomController,
                       decoration: const InputDecoration(
                         labelText: 'Nom',
                         prefixIcon: Icon(Icons.person),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre nom';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer votre nom' : null,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // POSTNOM
                     TextFormField(
                       controller: _postnomController,
                       decoration: const InputDecoration(
                         labelText: 'Postnom (Optionnel)',
                         prefixIcon: Icon(Icons.person_outline),
                       ),
-                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // PRENOM
                     TextFormField(
                       controller: _prenomController,
                       decoration: const InputDecoration(
                         labelText: 'Prénom',
                         prefixIcon: Icon(Icons.person),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre prénom';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer votre prénom' : null,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // DATE DE NAISSANCE
                     TextFormField(
                       controller: _dateNaissanceController,
                       decoration: InputDecoration(
@@ -163,60 +158,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () => _selectDate(context),
                         ),
                       ),
-                      readOnly: true, // Empêche la saisie directe
+                      readOnly: true,
                       onTap: () => _selectDate(context),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez sélectionner votre date de naissance';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez sélectionner votre date de naissance' : null,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // SEXE
                     DropdownButtonFormField<String>(
                       value: _selectedSexe,
                       decoration: const InputDecoration(
                         labelText: 'Sexe',
                         prefixIcon: Icon(Icons.wc),
                       ),
-                      hint: const Text('Sélectionnez votre sexe'),
                       items: <String>['Homme', 'Femme']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedSexe = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez sélectionner votre sexe';
-                        }
-                        return null;
-                      },
+                          .map((value) => DropdownMenuItem(value: value, child: Text(value)))
+                          .toList(),
+                      onChanged: (value) => setState(() => _selectedSexe = value),
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez sélectionner votre sexe' : null,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // LIEU DE NAISSANCE
                     TextFormField(
                       controller: _lieuNaissanceController,
                       decoration: const InputDecoration(
                         labelText: 'Lieu de Naissance',
                         prefixIcon: Icon(Icons.location_on),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre lieu de naissance';
-                        }
-                        return null;
-                      },
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Veuillez entrer votre lieu de naissance' : null,
                     ),
                     const SizedBox(height: 16.0),
-                    // Sélection de la Province
+
+                    // PROVINCE
                     DropdownButtonFormField<Province>(
                       value: _selectedProvince,
                       decoration: InputDecoration(
@@ -227,36 +201,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      hint: Text(
-                          communeProvider.isLoading && communeProvider.provinces.isEmpty
-                              ? 'Chargement des provinces...'
-                              : 'Sélectionnez votre province de résidence'
-                      ),
-                      items: communeProvider.provinces.map((Province province) {
-                        return DropdownMenuItem<Province>(
-                          value: province,
-                          child: Text(province.nom),
-                        );
-                      }).toList(),
-                      onChanged: (Province? newValue) {
+                      items: communeProvider.provinces
+                          .map((province) => DropdownMenuItem(value: province, child: Text(province.nom)))
+                          .toList(),
+                      onChanged: (value) {
                         setState(() {
-                          _selectedProvince = newValue;
-                          _selectedCommune = null; // Réinitialise la commune
-                          if (newValue != null) {
-                            communeProvider.fetchCommunesByProvinceId(newValue.id);
-                          }
+                          _selectedProvince = value;
+                          _selectedCommune = null;
+                          if (value != null) communeProvider.fetchCommunesByProvinceId(value.id);
                         });
                       },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Veuillez sélectionner votre province';
-                        }
-                        return null;
-                      },
+                      validator: (value) => value == null ? 'Veuillez sélectionner votre province' : null,
                       isExpanded: true,
                     ),
                     const SizedBox(height: 16.0),
-                    // Sélection de la Commune (dépend de la province)
+
+                    // COMMUNE
                     DropdownButtonFormField<Commune>(
                       value: _selectedCommune,
                       decoration: InputDecoration(
@@ -267,37 +227,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      hint: Text(
-                          communeProvider.isLoading && _selectedProvince != null
-                              ? 'Chargement des communes...'
-                              : (_selectedProvince == null
-                                  ? 'Sélectionnez d\'abord une province'
-                                  : 'Sélectionnez votre commune de résidence')
-                      ),
-                      items: _selectedProvince == null || communeProvider.communes.isEmpty
+                      items: _selectedProvince == null
                           ? []
-                          : communeProvider.communes.map((Commune commune) {
-                              return DropdownMenuItem<Commune>(
-                                value: commune,
-                                child: Text(commune.nom),
-                              );
-                            }).toList(),
-                      onChanged: _selectedProvince == null
-                          ? null // Désactivé si aucune province sélectionnée
-                          : (Commune? newValue) {
-                              setState(() {
-                                _selectedCommune = newValue;
-                              });
-                            },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Veuillez sélectionner votre commune';
-                        }
-                        return null;
-                      },
+                          : communeProvider.communes.map((commune) => DropdownMenuItem(value: commune, child: Text(commune.nom))).toList(),
+                      onChanged: _selectedProvince == null ? null : (value) => setState(() => _selectedCommune = value),
+                      validator: (value) => value == null ? 'Veuillez sélectionner votre commune' : null,
                       isExpanded: true,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // MOT DE PASSE
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
@@ -305,28 +244,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Mot de passe',
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
+                          icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer un mot de passe';
-                        }
-                        if (value.length < 6) {
-                          return 'Le mot de passe doit contenir au moins 6 caractères';
-                        }
+                        if (value == null || value.isEmpty) return 'Veuillez entrer un mot de passe';
+                        if (value.length < 6) return 'Le mot de passe doit contenir au moins 6 caractères';
                         return null;
                       },
-                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16.0),
+
+                    // CONFIRMATION MOT DE PASSE
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: !_isConfirmPasswordVisible,
@@ -334,79 +264,106 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Confirmer le mot de passe',
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                            });
-                          },
+                          icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez confirmer votre mot de passe';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Les mots de passe ne correspondent pas';
-                        }
+                        if (value == null || value.isEmpty) return 'Veuillez confirmer votre mot de passe';
+                        if (value != _passwordController.text) return 'Les mots de passe ne correspondent pas';
                         return null;
                       },
-                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
-                    const SizedBox(height: 24.0),
+                    const SizedBox(height: 16.0),
+
+                    // ✅ Politique de confidentialité moderne
+                    InkWell(
+                      onTap: () => setState(() => _acceptedPrivacy = !_acceptedPrivacy),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: _acceptedPrivacy,
+                            onChanged: (value) => setState(() => _acceptedPrivacy = value ?? false),
+                          ),
+                          Expanded(
+                            child: Wrap(
+                              children: [
+                                const Text('J’ai lu et j’accepte la '),
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                                  ),
+                                  child: const Text(
+                                    'Politique de confidentialité',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                const Text('.'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // BOUTON S'INSCRIRE
                     authProvider.isLoading
-                        ? const CircularProgressIndicator(color: AppColors.primaryBlue)
-                        : ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                if (_selectedProvince == null || _selectedCommune == null) {
-                                  _showSnackBar('Veuillez sélectionner votre province et votre commune.', isError: true);
-                                  return;
-                                }
+                        ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+                        : SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _acceptedPrivacy
+                                  ? () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        if (_selectedProvince == null || _selectedCommune == null) {
+                                          _showSnackBar('Veuillez sélectionner votre province et votre commune.', isError: true);
+                                          return;
+                                        }
 
-                                final citoyenData = {
-                                  'nom': _nomController.text,
-                                  'postnom': _postnomController.text.isEmpty ? null : _postnomController.text,
-                                  'prenom': _prenomController.text,
-                                  'dateNaissance': _dateNaissanceController.text,
-                                  'sexe': _selectedSexe,
-                                  'lieuNaissance': _lieuNaissanceController.text,
-                                  'communeId': _selectedCommune!.id,
-                                  'password': _passwordController.text,
-                                };
+                                        final citoyenData = {
+                                          'nom': _nomController.text,
+                                          'postnom': _postnomController.text.isEmpty ? null : _postnomController.text,
+                                          'prenom': _prenomController.text,
+                                          'dateNaissance': _dateNaissanceController.text,
+                                          'sexe': _selectedSexe,
+                                          'lieuNaissance': _lieuNaissanceController.text,
+                                          'communeId': _selectedCommune!.id,
+                                          'password': _passwordController.text,
+                                        };
 
-                                final success = await authProvider.register(citoyenData);
-                                if (success) {
-                                  _showSnackBar('Inscription réussie ! Vous êtes maintenant connecté.');
-                                  // Naviguer directement vers le tableau de bord
-                                  AppRouter.navigateToDashboard(context);
-                                } else {
-                                  _showSnackBar(authProvider.errorMessage ?? 'Échec de l\'inscription.', isError: true);
-                                }
-                              }
-                            },
-                            child: const Text('S\'inscrire'),
+                                        final success = await authProvider.register(citoyenData);
+                                        if (success) {
+                                          _showSnackBar('Inscription réussie ! Vous êtes maintenant connecté.');
+                                          AppRouter.navigateToDashboard(context);
+                                        } else {
+                                          _showSnackBar(authProvider.errorMessage ?? 'Échec de l\'inscription.', isError: true);
+                                        }
+                                      }
+                                    }
+                                  : null,
+                              child: const Text('S\'inscrire'),
+                            ),
                           ),
                     const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Déjà un compte ?',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                        Text('Déjà un compte ?', style: Theme.of(context).textTheme.bodyMedium),
                         TextButton(
-                          onPressed: () {
-                            AppRouter.navigateToLogin(context); // Utilise AppRouter pour la navigation
-                          },
+                          onPressed: () => AppRouter.navigateToLogin(context),
                           child: Text(
                             'Se connecter',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
