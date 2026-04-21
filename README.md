@@ -1,4 +1,4 @@
-# 🌍 e-Services
+# e-Services
 
 ## 📖 Introduction
 
